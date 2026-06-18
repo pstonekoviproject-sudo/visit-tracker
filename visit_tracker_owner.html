@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Visit Tracker">
 <title>Visit Tracker — Owner</title>
 <link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -746,8 +746,6 @@ window.setRange=function(r){
 }
 
 let _detailData=[];
-let _charts={};
-function destroyCharts(){Object.values(_charts).forEach(c=>{try{c.destroy();}catch(e){}});_charts={};}
 
 window.renderReport=function(){
   const from=document.getElementById('r-from')?.value||'';
@@ -760,7 +758,6 @@ window.renderReport=function(){
   const infFiltered=mktFiltered.filter(v=>v.visitType==='influencer-visit');
   const fieldFiltered=mktFiltered.filter(v=>v.visitType==='field-visit');
 
-  destroyCharts();
   _detailData=filtered; // Store for detail modal
 
   if(!filtered.length&&!mktFiltered.length){
@@ -819,23 +816,19 @@ window.renderReport=function(){
       <div class="met" onclick="showDetail('closed')" style="cursor:pointer"><div class="mv" style="color:var(--tx2)">${closed}</div><div class="ml">Closed</div></div>
     </div>
 
-    <!-- 2. STAGE DONUT CHART -->
+    <!-- 2. STAGE BREAKDOWN -->
     <div style="font-size:13px;font-weight:800;color:var(--tx);margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="width:4px;height:16px;background:#F59E0B;border-radius:2px;display:inline-block"></span> Stage Breakdown</div>
     <div class="card" style="margin-bottom:16px">
-      <canvas id="stage-chart" height="200"></canvas>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;justify-content:center">
-        ${[['Pending','#F59E0B',pending],['Fully Billed','#1D9E75',fullyBilled],['Partially Billed','#F97316',partBilled],['Follow-up','#7F77DD',followup],['Closed','#94A3B8',closed]].filter(x=>x[2]>0).map(([l,c,v])=>`<div style="display:flex;align-items:center;gap:4px;font-size:11px"><div style="width:10px;height:10px;border-radius:2px;background:${c}"></div>${l}: <strong>${v}</strong></div>`).join('')}
-      </div>
+      ${[['Pending','#F59E0B',pending],['Fully Billed','#1D9E75',fullyBilled],['Partially Billed','#F97316',partBilled],['Follow-up','#7F77DD',followup],['Closed','#94A3B8',closed]].filter(x=>x[2]>0).map(([l,c,v])=>`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="width:110px;font-size:12px;font-weight:600;color:var(--tx)">${l}</div>
+          <div style="flex:1;height:8px;background:var(--bg);border-radius:999px;overflow:hidden"><div style="height:100%;width:${Math.round(v/Math.max(total,1)*100)}%;background:${c};border-radius:999px"></div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--tx2);min-width:20px;text-align:right">${v}</div>
+        </div>`).join('')}
     </div>
 
     <!-- 3. STAFF-WISE SECTION -->
     <div style="font-size:13px;font-weight:800;color:var(--tx);margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="width:4px;height:16px;background:#1D9E75;border-radius:2px;display:inline-block"></span> Staff-wise Performance</div>
-
-    <!-- Staff bar chart -->
-    <div class="card" style="margin-bottom:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px">Conversion % by Staff</div>
-      <canvas id="staff-chart" height="180"></canvas>
-    </div>
 
     <!-- Staff detail table -->
     <div class="card" style="margin-bottom:16px">
@@ -874,10 +867,6 @@ window.renderReport=function(){
 
     <!-- 4. SOURCE-WISE SECTION -->
     <div style="font-size:13px;font-weight:800;color:var(--tx);margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="width:4px;height:16px;background:#7F77DD;border-radius:2px;display:inline-block"></span> Source-wise Breakdown</div>
-    <div class="card" style="margin-bottom:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px">Visits by Source</div>
-      <canvas id="src-chart" height="160"></canvas>
-    </div>
     <div class="card" style="margin-bottom:16px">
       ${srcData.length?srcData.map(s=>`
         <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr)">
@@ -907,7 +896,6 @@ window.renderReport=function(){
 
     <div class="card" style="margin-bottom:10px">
       <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px">Field Visit → Shop Visit Conversion</div>
-      <canvas id="mkt-chart" height="140"></canvas>
     </div>
     <div class="card" style="margin-bottom:16px">
       ${mktData.map(s=>`
@@ -925,55 +913,6 @@ window.renderReport=function(){
   `;
 
   // Draw charts after DOM update
-  setTimeout(()=>{try{drawCharts(staffData,srcData,mktData,{pending,fullyBilled,partBilled,followup,closed});}catch(e){console.warn('Chart error:',e);}},50);
-}
-
-function drawCharts(staffData,srcData,mktData,stages){
-  if(typeof Chart==='undefined') return;
-  const colors=['#7F77DD','#1D9E75','#F59E0B','#E24B4A','#F97316','#8B5CF6','#06B6D4','#EC4899'];
-
-  // Stage donut
-  const sc=document.getElementById('stage-chart');
-  if(sc){
-    const labels=[],data=[],bgs=[];
-    [['Pending','#F59E0B',stages.pending],['Fully Billed','#1D9E75',stages.fullyBilled],['Partially Billed','#F97316',stages.partBilled],['Follow-up','#7F77DD',stages.followup],['Closed','#94A3B8',stages.closed]].filter(x=>x[2]>0).forEach(([l,c,v])=>{labels.push(l);data.push(v);bgs.push(c);});
-    _charts.stage=new Chart(sc,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:bgs,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{display:false}},cutout:'60%'}});
-  }
-
-  // Staff bar chart
-  const stc=document.getElementById('staff-chart');
-  if(stc&&staffData.length){
-    _charts.staff=new Chart(stc,{type:'bar',
-      data:{labels:staffData.map(s=>s.name),datasets:[
-        {label:'Total',data:staffData.map(s=>s.total),backgroundColor:'#E0DEFF',borderRadius:4},
-        {label:'Billed',data:staffData.map(s=>s.billed),backgroundColor:'#7F77DD',borderRadius:4},
-      ]},
-      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1}}}}
-    });
-  }
-
-  // Source donut
-  const src=document.getElementById('src-chart');
-  if(src&&srcData.length){
-    _charts.src=new Chart(src,{type:'bar',
-      data:{labels:srcData.map(s=>s.name),datasets:[
-        {label:'Visits',data:srcData.map(s=>s.total),backgroundColor:colors.slice(0,srcData.length),borderRadius:4},
-      ]},
-      options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1}},y:{grid:{display:false}}}}
-    });
-  }
-
-  // Marketing chart
-  const mkt=document.getElementById('mkt-chart');
-  if(mkt&&mktData.length){
-    _charts.mkt=new Chart(mkt,{type:'bar',
-      data:{labels:mktData.map(s=>s.name),datasets:[
-        {label:'Field Visits',data:mktData.map(s=>s.fieldVisits),backgroundColor:'#FEF3C7',borderColor:'#F59E0B',borderWidth:1.5,borderRadius:4},
-        {label:'Converted',data:mktData.map(s=>s.converted),backgroundColor:'#F59E0B',borderRadius:4},
-      ]},
-      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1}}}}
-    });
-  }
 }
 
 // ---- OWNER LOGIN ----
