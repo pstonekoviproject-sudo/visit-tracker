@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#7F77DD">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="My Visits">
+<link rel="manifest" href="manifest_staff.json">
+<title>Visit Tracker — Staff</title>
+<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --p:#7F77DD;--pd:#534AB7;--plt:#EEEDFE;--ptxt:#3C3489;
+  --glt:#E1F5EE;--gtxt:#0F6E56;--gbd:#5DCAA5;
+  --rlt:#FCEBEB;--rtxt:#A32D2D;
+  --alt:#FAEEDA;--atxt:#854F0B;
+  --gray:#F1EFE8;--gtx2:#5F5E5A;
+  --bg:#f4f4f0;--card:#fff;--bdr:#e5e5e0;
+  --tx:#1a1a18;--tx2:#666;--tx3:#aaa;
+  --r:14px;--rsm:10px;--rpill:999px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+#login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#f0effd 0%,var(--bg) 60%)}
+.llogo{width:68px;height:68px;border-radius:22px;background:var(--p);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 4px 20px rgba(127,119,221,.35)}
+.llogo i{font-size:34px;color:#fff}
+.ltitle{font-size:24px;font-weight:800;color:var(--tx);margin-bottom:4px}
+.lsub{font-size:14px;color:var(--tx2);margin-bottom:32px}
+.lcard{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:24px;width:100%;max-width:340px;box-shadow:0 2px 16px rgba(0,0,0,.06)}
+.lcard label{display:block;font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px}
+.lcard select{width:100%;font-size:15px;padding:12px 14px;border:1.5px solid var(--bdr);border-radius:var(--rsm);background:var(--bg);color:var(--tx);font-family:inherit;margin-bottom:16px}
+.lcard select:focus{outline:none;border-color:var(--p)}
+.lbtn{width:100%;padding:14px;font-size:15px;font-weight:800;border-radius:var(--rsm);background:var(--p);color:#fff;border:none;cursor:pointer;font-family:inherit}
+.lbtn:active{opacity:.85}
+.lhint{font-size:12px;color:var(--tx3);text-align:center;margin-top:14px}
+.lerr{display:none;background:var(--rlt);color:var(--rtxt);border-radius:var(--rsm);padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:14px;text-align:center}
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.show{display:flex}
+.header{background:var(--card);border-bottom:1px solid var(--bdr);padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
+.hgreeting{font-size:12px;color:var(--tx2)}
+.hname{font-size:18px;font-weight:800}
+.sync-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:6px;vertical-align:2px}
+.sync-ok{background:#1D9E75}.sync-err{background:#E24B4A}.sync-loading{background:#F5A623;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.havatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.hav-staff{background:var(--plt);color:var(--ptxt)}
+.hav-sup{background:#E8F5E2;color:#2D6A0A}
+.hav-mkt{background:#FEF3C7;color:#92400E}
+.content{flex:1;padding:14px;max-width:480px;width:100%;margin:0 auto;padding-bottom:90px}
+.bnav{background:var(--card);border-top:1px solid var(--bdr);display:flex;position:fixed;bottom:0;left:0;right:0;z-index:40}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px 12px;gap:3px;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--tx2);font-size:10px;font-weight:600;position:relative}
+.bnav-btn i{font-size:23px}.bnav-btn.on{color:var(--p)}
+.ndot{width:8px;height:8px;border-radius:50%;background:var(--rtxt);position:absolute;top:8px;right:calc(50% - 16px);border:2px solid var(--card)}
+.pg{display:none}.pg.on{display:block}
+.mrow{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+.met{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rsm);padding:13px 12px;text-align:center}
+.mv{font-size:24px;font-weight:800}.ml{font-size:11px;color:var(--tx2);margin-top:2px;font-weight:500}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.badge{display:inline-block;padding:2px 9px;border-radius:var(--rpill);font-size:11px;font-weight:700}
+.b-pending{background:var(--alt);color:var(--atxt)}
+.b-partially-billed{background:#FEF3C7;color:#92400E}
+.b-fully-billed,.b-billed{background:var(--glt);color:var(--gtxt)}
+.b-followup{background:#E6F1FB;color:#185FA5}.b-closed{background:var(--gray);color:var(--gtx2)}
+.b-hot{background:#FAECE7;color:#993C1D}.b-warm{background:var(--alt);color:var(--atxt)}.b-cold{background:#E6F1FB;color:#185FA5}
+.b-od{background:var(--rlt);color:var(--rtxt)}.b-td{background:var(--plt);color:var(--ptxt)}.b-up{background:var(--glt);color:var(--gtxt)}
+.b-supervisor{background:#E8F5E2;color:#2D6A0A}
+.marketing-card{border-left:3px solid #F59E0B;border-radius:0 var(--r) var(--r) 0}
+.photo-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;align-items:center;justify-content:center;cursor:pointer}
+.photo-lightbox.open{display:flex}
+.photo-lightbox img{max-width:95vw;max-height:90vh;border-radius:8px;object-fit:contain}
+.btn{padding:9px 14px;font-size:13px;font-family:inherit;border-radius:var(--rsm);cursor:pointer;font-weight:600;border:1px solid var(--bdr);color:var(--tx);background:var(--bg);display:inline-flex;align-items:center;gap:5px}
+.btn:active{opacity:.7}
+.btn-p{background:var(--p);color:#fff;border-color:var(--pd)}
+.btn-g{background:var(--glt);color:var(--gtxt);border-color:var(--gbd)}
+.btn-r{background:var(--rlt);color:var(--rtxt);border-color:#F09595}
+.btn-sm{padding:6px 11px;font-size:12px}
+.btn-fab{position:fixed;bottom:74px;right:16px;width:54px;height:54px;border-radius:50%;background:var(--p);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(83,74,183,.4);z-index:39}
+.btn-fab:active{transform:scale(.95)}.btn-fab i{font-size:26px}
+.fgrp{margin-bottom:12px}
+.fgrp label{display:block;font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px}
+.fgrp input,.fgrp select,.fgrp textarea{width:100%;font-size:13px;padding:9px 11px;border:1.5px solid var(--bdr);border-radius:var(--rsm);background:var(--bg);color:var(--tx);font-family:inherit}
+.fgrp textarea{min-height:64px;resize:vertical}
+.fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{outline:none;border-color:var(--p)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mwrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-end;justify-content:center}
+.mwrap.open{display:flex}
+.modal{background:var(--card);border-radius:var(--r) var(--r) 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:20px 16px 34px}
+.modal-handle{width:40px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 18px}
+.modal-title{font-size:17px;font-weight:800;margin-bottom:18px}
+.mact{display:flex;gap:8px;margin-top:16px}
+.mact .btn{flex:1;justify-content:center;padding:12px}
+.sbar{position:relative;margin-bottom:10px}
+.sbar i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:16px;pointer-events:none}
+.sbar input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--bdr);border-radius:var(--rsm);font-size:13px;background:var(--card);color:var(--tx);font-family:inherit}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 13px;font-size:12px;border:1px solid var(--bdr);border-radius:var(--rpill);background:var(--card);color:var(--tx2);cursor:pointer;white-space:nowrap;font-family:inherit;font-weight:600}
+.chip.on{background:var(--p);color:#fff;border-color:var(--pd)}
+.stabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:none}
+.stabs::-webkit-scrollbar{display:none}
+.stab{padding:6px 13px;font-size:12px;border:1px solid var(--bdr);border-radius:var(--rpill);background:var(--card);color:var(--tx2);cursor:pointer;white-space:nowrap;font-family:inherit;font-weight:600}
+.stab.on{background:var(--p);color:#fff;border-color:var(--pd);font-weight:700}
+.fcard{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:13px 14px;margin-bottom:10px}
+.fcard.od{border-left:4px solid #E24B4A;border-radius:0 var(--r) var(--r) 0}
+.fcard.td{border-left:4px solid var(--p);border-radius:0 var(--r) var(--r) 0}
+.fcard.up{border-left:4px solid #1D9E75;border-radius:0 var(--r) var(--r) 0}
+.slbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--tx2);margin:14px 0 7px;display:flex;align-items:center;gap:5px}
+.cbox{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)}
+.citem{background:var(--bg);border-radius:var(--rsm);padding:8px 10px;margin-bottom:6px}
+.cmeta{font-size:11px;color:var(--tx2);margin-bottom:2px;font-weight:700}
+.ctxt{font-size:13px;color:var(--tx);line-height:1.4}
+.cinrow{display:flex;gap:6px;margin-top:8px}
+.cinrow input{flex:1;font-size:13px;padding:9px 10px;border:1.5px solid var(--bdr);border-radius:var(--rsm);background:var(--card);color:var(--tx);font-family:inherit}
+.cinrow input:focus{outline:none;border-color:var(--p)}
+.ep{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)}
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.sec-head h2{font-size:16px;font-weight:800}
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--tx2)}
+.empty i{font-size:36px;display:block;margin-bottom:10px;color:var(--tx3)}
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:var(--pd);color:#fff;padding:9px 18px;border-radius:var(--rpill);font-size:13px;font-weight:600;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.notif-banner{display:none;background:#EEEDFE;border-bottom:1px solid #c9c5f5;padding:10px 14px}
+.sup-banner{background:#E8F5E2;border-bottom:1px solid #b7e0a0;padding:8px 14px;font-size:12px;color:#2D6A0A;font-weight:600;display:none}
+.vtype-sel{background:var(--p)!important;color:#fff!important;border-color:var(--pd)!important}
+</style>
+</head>
+<body>
+<div id="login">
+  <div class="llogo"><i class="ti ti-user-circle"></i></div>
+  <div class="ltitle">Visit Tracker</div>
+  <div class="lsub">Login</div>
+  <div class="lcard">
+    <div class="lerr" id="lerr"></div>
+    <label>Ningalude peru select cheyyuka</label>
+    <select id="lsel"><option value="">— Loading... —</option></select>
+    <label style="display:block;font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px;margin-top:14px">4-digit PIN</label>
+    <input type="password" id="lpin" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="● ● ● ●" style="width:100%;font-size:22px;letter-spacing:8px;text-align:center;padding:12px;border:1.5px solid var(--bdr);border-radius:var(--rsm);background:var(--bg);color:var(--tx);font-family:inherit;margin-bottom:16px" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="lbtn" onclick="doLogin()"><i class="ti ti-login" style="font-size:16px;vertical-align:-2px;margin-right:6px"></i>Login</button>
+    <div class="lhint">Ningalude visits maatraame kaanaavunnathaanu</div>
+  </div>
+</div>
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="hgreeting" id="hg">Good morning,</div>
+      <div style="display:flex;align-items:center">
+        <div class="hname" id="hn">Staff</div>
+        <span class="sync-dot sync-loading" id="sdot"></span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:11px;color:var(--tx2);text-align:right" id="hd"></div>
+      <div class="havatar hav-staff" id="hav">ST</div>
+      <button class="btn btn-sm" onclick="openPinChange()" style="padding:6px 10px" title="Change PIN"><i class="ti ti-lock" style="font-size:13px"></i></button>
+      <button class="btn btn-sm btn-r" onclick="logout()" style="padding:6px 10px"><i class="ti ti-logout" style="font-size:13px"></i> Sign Out</button>
+    </div>
+  </div>
+  <div class="sup-banner" id="sup-banner"></div>
+  <div class="notif-banner" id="notif-banner">
+    <div style="display:flex;align-items:center;gap:10px">
+      <i class="ti ti-bell-ringing" style="font-size:22px;color:var(--p);flex-shrink:0"></i>
+      <div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--ptxt)">Follow-up reminders enable cheyyano?</div>
+      <div style="font-size:11px;color:var(--ptxt);opacity:.8;margin-top:1px" id="notif-sub">9:35am, 11am, 1pm, 3pm, 5pm</div></div>
+      <button class="btn btn-sm btn-p" onclick="reqNotif()" style="white-space:nowrap;flex-shrink:0">Enable</button>
+      <button onclick="document.getElementById('notif-banner').style.display='none'" style="border:none;background:none;cursor:pointer;color:var(--ptxt);font-size:18px;padding:4px"><i class="ti ti-x"></i></button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="pg on" id="pg-home">
+      <!-- Day Start/End (marketing only) -->
+      <div id="day-tracker" style="display:none;margin-bottom:14px">
+        <div class="card" style="border-color:#F59E0B;background:linear-gradient(135deg,#FFFBEB,#fff)">
+          <div id="day-not-started">
+            <div style="font-size:14px;font-weight:700;color:#92400E;margin-bottom:6px">📍 Field Day Tracker</div>
+            <div style="font-size:12px;color:var(--tx2);margin-bottom:12px">Day start cheyyumbol location + time record aavunnu</div>
+            <button onclick="dayStart()" style="width:100%;padding:13px;font-size:15px;font-weight:800;border-radius:var(--rsm);background:#1D9E75;color:#fff;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+              <i class="ti ti-player-play" style="font-size:18px"></i> Day Start
+            </button>
+          </div>
+          <div id="day-started" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#1D9E75">🟢 Field Day Active</div>
+                <div style="font-size:12px;color:var(--tx2);margin-top:2px" id="day-start-info"></div>
+              </div>
+              <div style="font-size:22px;font-weight:800;color:var(--p)" id="day-timer">0:00</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">
+              <div style="background:var(--bg);border-radius:var(--rsm);padding:8px;text-align:center">
+                <div style="font-size:16px;font-weight:800;color:var(--tx)" id="day-visit-count">0</div>
+                <div style="font-size:10px;color:var(--tx2)">Visits</div>
+              </div>
+              <div style="background:var(--bg);border-radius:var(--rsm);padding:8px;text-align:center">
+                <div style="font-size:16px;font-weight:800;color:var(--tx)" id="day-hours">0h 0m</div>
+                <div style="font-size:10px;color:var(--tx2)">Field Time</div>
+              </div>
+              <div style="background:var(--bg);border-radius:var(--rsm);padding:8px;text-align:center">
+                <div style="font-size:16px;font-weight:800;color:var(--tx)" id="day-km">0 km</div>
+                <div style="font-size:10px;color:var(--tx2)">Distance</div>
+              </div>
+            </div>
+            <button onclick="dayEnd()" style="width:100%;padding:13px;font-size:15px;font-weight:800;border-radius:var(--rsm);background:#E24B4A;color:#fff;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+              <i class="ti ti-player-stop" style="font-size:18px"></i> Day End
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mrow" id="hm"></div>
+      <div class="sec-head"><h2 id="home-fup-title">Today's Follow-ups</h2></div>
+      <div id="htoday"></div>
+      <div class="sec-head" style="margin-top:16px"><h2 id="home-recent-title">Recent Visits</h2></div>
+      <div id="hrecent"></div>
+    </div>
+    <div class="pg" id="pg-visits">
+      <div class="sbar"><i class="ti ti-search"></i><input type="text" id="vsearch" placeholder="Name, place, product..." oninput="renderVisits()"></div>
+      <div class="chips" id="vchips"></div>
+      <!-- Supervisor: staff tabs -->
+      <div class="stabs" id="vstabs" style="display:none"></div>
+      <div id="vlist"></div>
+    </div>
+    <div class="pg" id="pg-fups">
+      <div class="mrow" id="fm"></div>
+      <!-- Supervisor: staff tabs in follow-ups -->
+      <div class="stabs" id="fstabs" style="display:none"></div>
+      <div id="flist"></div>
+    </div>
+  </div>
+  <button class="btn-fab" id="fab" onclick="openAdd()"><i class="ti ti-plus"></i></button>
+  <div class="bnav">
+    <button class="bnav-btn on" id="btn-home" onclick="goPage('home')"><i class="ti ti-home"></i>Home</button>
+    <button class="bnav-btn" id="btn-visits" onclick="goPage('visits')"><i class="ti ti-clipboard-list"></i>Visits</button>
+    <button class="bnav-btn" id="btn-fups" onclick="goPage('fups')" style="position:relative"><i class="ti ti-bell"></i><span class="ndot" id="ndot" style="display:none"></span>Follow-ups</button>
+  </div>
+</div>
+<div class="mwrap" id="vmodal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="mtitle">New Visit</div>
+    <input type="hidden" id="eid">
+
+    <!-- Visit type selector — marketing only -->
+    <div id="mkt-type-wrap" style="display:none;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px">Visit Type</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="vtype-customer" onclick="setVisitType('customer')" style="flex:1;justify-content:center;flex-direction:column;padding:12px 8px;gap:4px">
+          <i class="ti ti-user" style="font-size:20px"></i>
+          <span style="font-size:12px;font-weight:700">Customer</span>
+        </button>
+        <button class="btn" id="vtype-influencer" onclick="setVisitType('influencer')" style="flex:1;justify-content:center;flex-direction:column;padding:12px 8px;gap:4px">
+          <i class="ti ti-building" style="font-size:20px"></i>
+          <span style="font-size:12px;font-weight:700">Architect / Contractor / Builder</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Influencer type (shown when influencer selected) -->
+    <div id="influencer-type-wrap" style="display:none">
+      <div class="fgrp">
+        <label>Type</label>
+        <select id="finf-type">
+          <option value="Architect">Architect</option>
+          <option value="Contractor">Contractor</option>
+          <option value="Builder">Builder</option>
+          <option value="Dealer">Dealer</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="fgrp"><label>Company / Firm</label><input type="text" id="finf-company" placeholder="Company name"></div>
+    </div>
+    <div class="g2">
+      <div class="fgrp"><label>Date *</label><input type="date" id="fd"></div>
+      <div class="fgrp"><label>Name *</label><input type="text" id="fn" placeholder="Customer name"></div>
+      <div class="fgrp" id="place-fgrp">
+        <label>Place / Location</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="text" id="fp" placeholder="City/Area" style="flex:1;font-size:13px;padding:9px 11px;border:1.5px solid var(--bdr);border-radius:var(--rsm);background:var(--bg);color:var(--tx);font-family:inherit">
+          <button type="button" id="gps-btn" onclick="getGPS()" style="padding:9px 11px;background:var(--glt);color:var(--gtxt);border:1.5px solid var(--gbd);border-radius:var(--rsm);cursor:pointer;font-size:13px;display:none;white-space:nowrap;font-family:inherit;font-weight:600"><i class="ti ti-map-pin" style="font-size:14px;vertical-align:-2px"></i> GPS</button>
+        </div>
+        <div id="gps-status" style="font-size:11px;color:var(--tx2);margin-top:4px;display:none"></div>
+      </div>
+      <div class="fgrp"><label>Contact</label><input type="tel" id="fc" placeholder="Phone"></div>
+      <div class="fgrp"><label>Category</label><select id="fcat"><option>Customer</option><option>Dealer</option><option>Contractor</option><option>Architect</option><option>Other</option></select></div>
+      <div class="fgrp"><label>Product</label><input type="text" id="fprod" placeholder="Product"></div>
+      <div class="fgrp"><label>Source</label><select id="fsrc"><option>Walk-in</option><option>Social Media</option><option>Referral</option><option>Phone</option><option>Other</option></select></div>
+      <div class="fgrp"><label>Stage</label><select id="fstg"><option>Pending</option><option>Partially Billed</option><option>Fully Billed</option><option>Follow-up</option><option>Closed</option></select></div>
+      <div class="fgrp"><label>Temperature</label><select id="ftmp"><option value="">—</option><option>Hot</option><option>Warm</option><option>Cold</option></select></div>
+      <div class="fgrp"><label>Follow-up Date</label><input type="date" id="ffdt"></div>
+    </div>
+    <div class="fgrp"><label>Remarks</label><textarea id="frmk" placeholder="Notes..."></textarea></div>
+    <!-- Photo upload (marketing only, shown/hidden dynamically) -->
+    <div id="photo-wrap" style="display:none;margin-bottom:12px">
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px">Photos (max 2)</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="photo-previews"></div>
+      <label style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 14px;background:var(--bg);border:1.5px dashed var(--bdr);border-radius:var(--rsm);cursor:pointer;font-size:13px;color:var(--tx2);font-weight:500">
+        <i class="ti ti-camera" style="font-size:16px"></i> Photo add cheyyuka
+        <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)">
+      </label>
+      <div style="font-size:11px;color:var(--tx3);margin-top:5px">Camera or gallery — max 2 photos</div>
+    </div>
+    <!-- Marketing suggest (for sales staff) -->
+    <div id="mkt-suggest-wrap" style="display:none;background:#FEF3C7;border-radius:var(--rsm);padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:#92400E;margin-bottom:6px"><i class="ti ti-map-pin" style="font-size:12px;vertical-align:-1px"></i> Marketing staff ithinu munpe visit cheythittu undaakki!</div>
+      <div id="mkt-suggest-list"></div>
+      <div style="font-size:11px;color:#92400E;margin-top:6px">Referred by: <select id="mkt-ref-select" style="font-size:12px;padding:4px 8px;border:1px solid #F5D86E;border-radius:6px;background:#fff;color:#92400E;font-family:inherit"><option value="">— Link cheyyanda —</option></select></div>
+    </div>
+    <div class="mact">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-p" onclick="saveVisit()"><i class="ti ti-device-floppy"></i> Save</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+const FC={apiKey:"AIzaSyCLPOfFe6mB8msn7GNnjC31EL6eFRyHKMs",authDomain:"visit-tracker-a7d0a.firebaseapp.com",projectId:"visit-tracker-a7d0a",storageBucket:"visit-tracker-a7d0a.firebasestorage.app",messagingSenderId:"381386116373",appId:"1:381386116373:web:97dbe24bd5cbbe3dd62d1c"};
+const db=getFirestore(initializeApp(FC));
+let visits=[],staff=[],cmts={},me=null,myRole=null,myTeam=[],vf='',curPg='home',supVStaff='ALL',supFStaff='ALL';
+const today=new Date().toISOString().split('T')[0];
+
+function setSyncDot(s){const d=document.getElementById('sdot');if(!d)return;d.className='sync-dot '+(s==='ok'?'sync-ok':s==='err'?'sync-err':'sync-loading');}
+onSnapshot(collection(db,'visits'),snap=>{visits=snap.docs.map(d=>({id:d.id,...d.data()}));setSyncDot('ok');if(me)renderPage();},()=>setSyncDot('err'));
+onSnapshot(collection(db,'staff'),snap=>{staff=snap.docs.map(d=>({id:d.id,...d.data()}));populateLogin();if(me){updateMyTeam();renderPage();}});
+onSnapshot(collection(db,'comments'),snap=>{cmts={};snap.docs.forEach(d=>{cmts[d.id]=d.data().list||[];});if(me)renderPage();});
+
+async function saveVisitDB(v){setSyncDot('loading');await setDoc(doc(db,'visits',v.id),v);setSyncDot('ok');}
+async function saveCmtDB(vid,list){await setDoc(doc(db,'comments',vid),{list});}
+window._saveStaffPin=async function(s){await setDoc(doc(db,'staff',s.id),s);};
+
+function updateMyTeam(){
+  if(!me)return;
+  const s=staff.find(x=>x.name===me);
+  if(s&&s.role==='supervisor') myTeam=s.assignedStaff||[];
+  else myTeam=[];
+}
+
+function populateLogin(){
+  const sel=document.getElementById('lsel');
+  const active=staff.filter(s=>s.active);
+  if(!active.length)return;
+  sel.innerHTML='<option value="">— Select —</option>'+active.map(s=>`<option value="${s.name}">${s.name}${s.role==='supervisor'?' (Supervisor)':s.role==='marketing'?' (Marketing)':''}</option>`).join('');
+  try{
+    const saved=localStorage.getItem('cvt_me');
+    if(saved){const isActive=active.find(x=>x.name===saved);if(isActive&&!me){me=saved;myRole=isActive.role||'staff';updateMyTeam();showApp();}else if(!isActive&&me===saved)logout();}
+  }catch(e){}
+}
+
+window.doLogin=function(){
+  const v=document.getElementById('lsel').value;
+  const pin=document.getElementById('lpin').value.trim();
+  const err=document.getElementById('lerr');
+  if(!v){err.textContent='Staff select cheyyuka!';err.style.display='block';return;}
+  if(!pin||pin.length!==4){err.textContent='4-digit PIN ezhuthu!';err.style.display='block';return;}
+  const s=staff.find(x=>x.name===v);
+  if(!s||!s.active){err.textContent='Ee account inactive aayittu. Owner-ne contact cheyyuka.';err.style.display='block';return;}
+  // PIN verify
+  const correctPin=s.pin||'1234'; // default 1234 if not set
+  if(pin!==correctPin){err.textContent='PIN incorrect! Repeat try cheyyuka.';err.style.display='block';document.getElementById('lpin').value='';return;}
+  me=v;myRole=s.role||'staff';updateMyTeam();
+  try{localStorage.setItem('cvt_me',me);}catch(e){}
+  err.style.display='none';
+  showApp();
+}
+window.logout=function(){me=null;myRole=null;myTeam=[];try{localStorage.removeItem('cvt_me');}catch(e){}document.getElementById('app').classList.remove('show');document.getElementById('login').style.display='flex';document.getElementById('lsel').value='';}
+
+function showApp(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').classList.add('show');
+  const ini=me.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const hav=document.getElementById('hav');
+  hav.textContent=ini;
+  hav.className='havatar '+(myRole==='supervisor'?'hav-sup':myRole==='marketing'?'hav-mkt':'hav-staff');
+  document.getElementById('hn').textContent=me;
+  const hr=new Date().getHours();
+  document.getElementById('hg').textContent=hr<12?'Good morning,':(hr<17?'Good afternoon,':'Good evening,');
+  document.getElementById('hd').textContent=new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+  // Role banners
+  const supBanner=document.getElementById('sup-banner');
+  if(myRole==='supervisor'){
+    supBanner.style.display='block';
+    supBanner.style.background='#E8F5E2';supBanner.style.borderBottomColor='#b7e0a0';supBanner.style.color='#2D6A0A';
+    supBanner.innerHTML=`<i class="ti ti-shield-check" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Supervisor — Team: ${myTeam.length?myTeam.join(', '):'No staff assigned'}
+    &nbsp;&nbsp;<button onclick="toggleSalesMode()" id="sales-mode-btn" style="padding:4px 10px;font-size:11px;font-weight:700;border-radius:999px;background:#fff;color:#2D6A0A;border:1px solid #5DCAA5;cursor:pointer;font-family:inherit">Switch to Sales Mode</button>`;
+    document.getElementById('notif-sub').textContent='Team overdue follow-ups — notification varum';
+    document.getElementById('fab').style.display='none';
+  } else if(myRole==='marketing'){
+    supBanner.style.display='block';
+    supBanner.style.background='#FEF3C7';supBanner.style.borderBottomColor='#F5D86E';supBanner.style.color='#92400E';
+    supBanner.innerHTML=`<i class="ti ti-map-pin" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Marketing Staff — Field visit data enter cheyyaavunnu`;
+    document.getElementById('notif-sub').textContent='Field visit + follow-up reminders';
+    document.getElementById('home-fup-title').textContent='My Follow-ups Today';
+    document.getElementById('home-recent-title').textContent='Recent Field Visits';
+    // Marketing: show follow-up tab (same as staff)
+    document.getElementById('btn-fups').style.display='flex';
+  } else {
+    supBanner.style.display='none';
+  }
+  curPg='home';goPage('home');
+  setTimeout(initNotifs,800);
+  setTimeout(initDayTracker,300);
+  // Marketing: request location permission once on login
+  if(myRole==='marketing'){
+    setTimeout(initLocationPermission, 1200);
+  }
+}
+
+window.goPage=function(p){
+  curPg=p;
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.bnav-btn').forEach(x=>x.classList.remove('on'));
+  document.getElementById('pg-'+p).classList.add('on');
+  document.getElementById('btn-'+p).classList.add('on');
+  if(myRole!=='supervisor'||(myRole==='supervisor'&&window._salesMode)) document.getElementById('fab').style.display=(p==='home'||p==='visits')?'flex':'none';
+  else document.getElementById('fab').style.display='none';
+  renderPage();
+}
+function renderPage(){if(curPg==='home')renderHome();else if(curPg==='visits')renderVisits();else if(curPg==='fups')renderFups();updDot();}
+
+// For supervisor: show team visits. For staff: own visits only
+function myV(){
+  if(myRole==='supervisor'&&!window._salesMode) return visits.filter(v=>myTeam.includes(v.assisted));
+  if(myRole==='supervisor'&&window._salesMode) return visits.filter(v=>v.assisted===me&&v.visitType==='shop-visit');
+  if(myRole==='marketing') return visits.filter(v=>v.assisted===me&&(v.visitType==='field-visit'||v.visitType==='influencer-visit'));
+  return visits.filter(v=>v.assisted===me&&v.visitType!=='field-visit'&&v.visitType!=='influencer-visit');
+}
+function myF(){return myV().filter(v=>needsFollowup(v)).sort((a,b)=>a.fdate.localeCompare(b.fdate));}
+function needsFollowup(v){return v.fdate&&v.stage!=='Fully Billed'&&v.stage!=='Closed';}
+function dlabel(d){const diff=Math.round((new Date(d)-new Date(today))/86400000);if(diff===0)return 'Today';if(diff===1)return 'Tomorrow';if(diff>0)return diff+'d left';return Math.abs(diff)+'d overdue';}
+function bc(d){return d<today?'b-od':d===today?'b-td':'b-up';}
+function sb(s){const m={pending:'b-pending','partially billed':'b-partially-billed','fully billed':'b-fully-billed',billed:'b-fully-billed','follow-up':'b-followup',closed:'b-closed'};return m[s?.toLowerCase()]||'b-pending';}
+
+function renderHome(){
+  const mv=myV(),bi=mv.filter(v=>v.stage==='Fully Billed').length,pe=mv.filter(v=>v.stage==='Pending').length,ov=mv.filter(v=>needsFollowup(v)&&v.fdate<today).length,tf=mv.filter(v=>v.fdate===today&&needsFollowup(v));
+  document.getElementById('hm').innerHTML=`<div class="met"><div class="mv">${mv.length}</div><div class="ml">${myRole==='supervisor'?'Team Visits':'My Visits'}</div></div><div class="met"><div class="mv" style="color:#3B6D11">${bi}</div><div class="ml">Fully Billed</div></div><div class="met"><div class="mv" style="color:var(--atxt)">${pe}</div><div class="ml">Pending</div></div><div class="met"><div class="mv" style="color:var(--rtxt)">${ov}</div><div class="ml">Overdue</div></div>`;
+  document.getElementById('home-fup-title').textContent=myRole==='supervisor'?'Team Today Follow-ups':"Today's Follow-ups";
+  document.getElementById('home-recent-title').textContent=myRole==='supervisor'?'Team Recent Visits':'Recent Visits';
+  document.getElementById('htoday').innerHTML=tf.length?tf.map(v=>miniCard(v,true)).join(''):'<div style="font-size:13px;color:var(--tx2);text-align:center;padding:12px 0">Innu follow-up onnumilla ✓</div>';
+  document.getElementById('hrecent').innerHTML=[...myV()].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4).map(v=>miniCard(v,false)).join('')||'<div class="empty"><i class="ti ti-clipboard-x"></i><p>Visit onnumilla</p></div>';
+  updDot();
+  if(myRole==='marketing') updateDaySummary();
+}
+function miniCard(v,showFup){
+  return `<div class="card" style="padding:12px 14px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;margin-bottom:3px">${v.name}</div><div style="font-size:12px;color:var(--tx2);margin-bottom:7px">${[v.place,v.contact].filter(Boolean).join(' · ')}</div><div style="display:flex;gap:5px;flex-wrap:wrap">${v.stage?`<span class="badge ${sb(v.stage)}">${v.stage}</span>`:''} ${v.temp?`<span class="badge b-${v.temp.toLowerCase()}">${v.temp}</span>`:''} ${showFup&&v.fdate&&needsFollowup(v)?`<span class="badge ${bc(v.fdate)}">${dlabel(v.fdate)}</span>`:''}</div></div><div style="font-size:11px;color:var(--tx2);text-align:right;margin-left:8px">${myRole==='supervisor'&&!window._salesMode?v.assisted+' · ':''}${v.date}</div></div></div>`;
+}
+
+window.renderVisits=function(){
+  const q=(document.getElementById('vsearch')?.value||'').toLowerCase();
+  const chips=['All','Pending','Partially Billed','Fully Billed','Follow-up','Closed','Hot','Warm','Cold'];
+  document.getElementById('vchips').innerHTML=chips.map(c=>`<button class="chip${vf===c||(!vf&&c==='All')?' on':''}" onclick="setVF('${c}')">${c}</button>`).join('');
+  // Supervisor staff tabs
+  const vstabs=document.getElementById('vstabs');
+  if(myRole==='supervisor'&&myTeam.length){
+    vstabs.style.display='flex';
+    vstabs.innerHTML=['ALL',...myTeam].map(s=>`<button class="stab${supVStaff===s?' on':''}" onclick="setSupVStaff('${s}')">${s} <span style="font-size:10px;opacity:.7">${(s==='ALL'?myV():myV().filter(v=>v.assisted===s)).length}</span></button>`).join('');
+  } else vstabs.style.display='none';
+  let f=[...myV()].sort((a,b)=>b.date.localeCompare(a.date));
+  if(myRole==='supervisor'&&supVStaff!=='ALL') f=f.filter(v=>v.assisted===supVStaff);
+  if(q)f=f.filter(v=>`${v.name} ${v.place} ${v.product} ${v.contact}`.toLowerCase().includes(q));
+  if(vf&&vf!=='All')f=f.filter(v=>v.stage===vf||v.temp===vf);
+  document.getElementById('vlist').innerHTML=f.length?f.map(fullCard).join(''):'<div class="empty"><i class="ti ti-clipboard-x"></i><p>Visit kaanathu</p></div>';
+}
+window.setVF=function(c){vf=c==='All'?'':c;renderVisits();}
+window.setSupVStaff=function(s){supVStaff=s;renderVisits();}
+
+function fullCard(v){
+  const cc=(cmts[v.id]||[]).length;
+  const isSup=myRole==='supervisor'&&!window._salesMode;
+  const isMkt=v.visitType==='field-visit';
+  const isInf=v.visitType==='influencer-visit';
+  const visitBadge=isInf?`<span style="background:#E8F5E2;color:#2D6A0A;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:4px">${v.category||'Influencer'}</span>`:isMkt?`<span style="background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:4px">Field Visit</span>`:'';
+  const photosHtml=v.photos&&v.photos.length?`<div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap">${v.photos.map(p=>`<img src="${p}" onclick="viewPhoto('${p}')" style="width:72px;height:72px;object-fit:cover;border-radius:9px;border:1px solid var(--bdr);cursor:pointer">`).join('')}</div>`:'';
+  return `<div class="card${(isMkt||isInf)?' marketing-card':''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;font-weight:800;margin-bottom:3px">${v.name}${visitBadge}</div>
+        ${v.company?`<div style="font-size:12px;color:#2D6A0A;font-weight:600;margin-bottom:3px">🏢 ${v.company}</div>`:''}
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:7px">${[v.place,v.product,v.source].filter(Boolean).join(' · ')}${v.gpsLat?` <a href="https://maps.google.com/?q=${v.gpsLat},${v.gpsLng}" target="_blank" style="color:var(--p);font-size:11px;margin-left:4px"><i class="ti ti-map-pin" style="font-size:11px;vertical-align:-1px"></i> Map</a>`:''}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          ${v.stage?`<span class="badge ${sb(v.stage)}">${v.stage}</span>`:''}
+          ${v.temp?`<span class="badge b-${v.temp.toLowerCase()}">${v.temp}</span>`:''}
+          ${v.fdate&&needsFollowup(v)?`<span class="badge ${bc(v.fdate)}" style="font-size:10px">📅 ${v.fdate}</span>`:''}
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--tx2);text-align:right;margin-left:8px">${isSup?v.assisted+' · ':''}<span style="color:var(--tx3)">${v.date}</span></div>
+    </div>
+    ${v.contact?`<div style="font-size:12px;color:var(--tx2);margin-top:6px"><i class="ti ti-phone" style="font-size:12px;vertical-align:-1px"></i> ${v.contact}</div>`:''}
+    ${v.remarks?`<div style="font-size:12px;color:var(--tx2);margin-top:6px;font-style:italic">"${v.remarks}"</div>`:''}
+    ${photosHtml}
+    <div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr);flex-wrap:wrap">
+      ${!isSup?`<button class="btn btn-sm" onclick="editV('${v.id}')"><i class="ti ti-edit"></i> Edit</button>`:''}
+      <button class="btn btn-sm" onclick="tgCmt('${v.id}')"><i class="ti ti-message"></i> Notes${cc?` <span style="background:var(--p);color:#fff;border-radius:999px;font-size:10px;padding:1px 5px;margin-left:2px">${cc}</span>`:''}</button>
+    </div>
+    <div class="cbox" id="cb-${v.id}">
+      <div style="font-size:11px;font-weight:800;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Notes</div>
+      <div id="cl-${v.id}">${rCmts(v.id)}</div>
+      <div class="cinrow"><input type="text" id="ci-${v.id}" placeholder="Note ezhuthu..." onkeydown="if(event.key==='Enter')addCmt('${v.id}')"><button class="btn btn-sm btn-p" onclick="addCmt('${v.id}')"><i class="ti ti-send"></i></button></div>
+    </div>
+  </div>`;
+}
+
+function renderFups(){
+  const f=myF();
+  const ov=f.filter(v=>v.fdate<today).length,td=f.filter(v=>v.fdate===today).length,up=f.filter(v=>v.fdate>today).length;
+  document.getElementById('fm').innerHTML=`<div class="met"><div class="mv">${f.length}</div><div class="ml">Total</div></div><div class="met"><div class="mv" style="color:var(--rtxt)">${ov}</div><div class="ml">Overdue</div></div><div class="met"><div class="mv" style="color:var(--p)">${td}</div><div class="ml">Today</div></div><div class="met"><div class="mv" style="color:#0F6E56">${up}</div><div class="ml">Upcoming</div></div>`;
+  // Supervisor staff tabs for follow-ups
+  const fstabs=document.getElementById('fstabs');
+  if(myRole==='supervisor'&&myTeam.length){
+    fstabs.style.display='flex';
+    fstabs.innerHTML=['ALL',...myTeam].map(s=>`<button class="stab${supFStaff===s?' on':''}" onclick="setSupFStaff('${s}')">${s} <span style="font-size:10px;opacity:.7">${(s==='ALL'?f:f.filter(v=>v.assisted===s)).length}</span></button>`).join('');
+  } else fstabs.style.display='none';
+  let filt=f;
+  if(myRole==='supervisor'&&supFStaff!=='ALL') filt=f.filter(v=>v.assisted===supFStaff);
+  if(!filt.length){document.getElementById('flist').innerHTML='<div class="empty"><i class="ti ti-calendar-check"></i><p>Follow-up onnumilla</p></div>';return;}
+  const grps=[[filt.filter(v=>v.fdate<today),'od','ti-alert-circle','#E24B4A','Overdue'],[filt.filter(v=>v.fdate===today),'td','ti-bell','var(--p)','Today'],[filt.filter(v=>v.fdate>today),'up','ti-calendar','#1D9E75','Upcoming']];
+  document.getElementById('flist').innerHTML=grps.filter(g=>g[0].length).map(([arr,cls,icon,col,lbl])=>`<div class="slbl"><i class="ti ${icon}" style="color:${col}"></i>${lbl} — ${arr.length}</div>${arr.map(v=>fCard(v,cls)).join('')}`).join('');
+}
+window.setSupFStaff=function(s){supFStaff=s;renderFups();}
+
+function fCard(v,cls){
+  const cc=(cmts[v.id]||[]).length;
+  const isSup=myRole==='supervisor'&&!window._salesMode;
+  return `<div class="fcard ${cls}" id="fc-${v.id}"><div style="font-size:15px;font-weight:800;margin-bottom:3px">${v.name}${isSup?` <span style="font-size:11px;color:var(--tx2);font-weight:500">(${v.assisted})</span>`:''}</div><div style="font-size:12px;color:var(--tx2);margin-bottom:8px">${[v.place,v.contact,v.product].filter(Boolean).join(' · ')}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px"><span class="badge ${bc(v.fdate)}">${dlabel(v.fdate)}</span> ${v.stage?`<span class="badge ${sb(v.stage)}">${v.stage}</span>`:''} ${v.temp?`<span class="badge b-${v.temp.toLowerCase()}">${v.temp}</span>`:''}</div>
+  ${!isSup?`<div style="background:var(--bg);border-radius:var(--rsm);padding:10px 12px;margin-bottom:10px"><div style="font-size:11px;font-weight:800;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px"><i class="ti ti-calendar-event" style="font-size:12px;vertical-align:-1px"></i> Next Follow-up Date</div><div style="display:flex;gap:7px;align-items:center"><input type="date" id="nfd-${v.id}" value="${v.fdate||''}" style="flex:1;font-size:13px;padding:8px 10px;border:1.5px solid var(--bdr);border-radius:var(--rsm);background:var(--card);color:var(--tx);font-family:inherit"><button class="btn btn-sm btn-p" onclick="setND('${v.id}')"><i class="ti ti-check"></i> Set</button>${v.fdate?`<button class="btn btn-sm btn-r" onclick="clearND('${v.id}')"><i class="ti ti-x"></i></button>`:''}</div>${v.fdate?`<div style="font-size:11px;color:var(--tx2);margin-top:5px"><i class="ti ti-clock" style="font-size:11px;vertical-align:-1px"></i> ${v.fdate} (${dlabel(v.fdate)})</div>`:''}</div>`:''}
+  ${isSup?`<div style="background:var(--rlt);border-radius:var(--rsm);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--rtxt)"><i class="ti ti-alert-circle" style="font-size:12px;vertical-align:-1px"></i> Follow-up: <strong>${v.fdate}</strong> (${dlabel(v.fdate)}) — ${v.assisted} cheythittilla</div>`:''}
+  <div style="display:flex;gap:6px;flex-wrap:wrap">${!isSup?`<button class="btn btn-sm btn-g" onclick="markDone('${v.id}')"><i class="ti ti-check"></i> Done</button><button class="btn btn-sm" onclick="tgEdit('${v.id}')"><i class="ti ti-edit"></i> Edit</button>`:''}<button class="btn btn-sm" onclick="tgCmt('${v.id}')"><i class="ti ti-message"></i> Comment${cc?` <span style="background:var(--p);color:#fff;border-radius:999px;font-size:10px;padding:1px 5px;margin-left:2px">${cc}</span>`:''}</button></div>
+  ${!isSup?`<div class="ep" id="ep-${v.id}"><div style="font-size:11px;font-weight:800;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Edit Visit</div><div class="g2" style="margin-bottom:8px"><div class="fgrp"><label>Stage</label><select id="es-${v.id}"><option${v.stage==='Pending'?' selected':''}>Pending</option><option${v.stage==='Partially Billed'?' selected':''}>Partially Billed</option><option${v.stage==='Fully Billed'?' selected':''}>Fully Billed</option><option${v.stage==='Follow-up'?' selected':''}>Follow-up</option><option${v.stage==='Closed'?' selected':''}>Closed</option></select></div><div class="fgrp"><label>Temperature</label><select id="et-${v.id}"><option value=""${!v.temp?' selected':''}>—</option><option${v.temp==='Hot'?' selected':''}>Hot</option><option${v.temp==='Warm'?' selected':''}>Warm</option><option${v.temp==='Cold'?' selected':''}>Cold</option></select></div><div class="fgrp"><label>Contact</label><input type="tel" id="ec-${v.id}" value="${v.contact||''}" placeholder="Phone"></div><div class="fgrp"><label>Product</label><input type="text" id="epr-${v.id}" value="${v.product||''}" placeholder="Product"></div></div><div class="fgrp"><label>Remarks</label><textarea id="erm-${v.id}" placeholder="Notes...">${v.remarks||''}</textarea></div><div style="display:flex;gap:8px"><button class="btn btn-sm" onclick="tgEdit('${v.id}')">Cancel</button><button class="btn btn-sm btn-p" onclick="saveEdit('${v.id}')"><i class="ti ti-device-floppy"></i> Save</button></div></div>`:''}
+  <div class="cbox" id="cb-${v.id}"><div style="font-size:11px;font-weight:800;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Comments</div><div id="cl-${v.id}">${rCmts(v.id)}</div><div class="cinrow"><input type="text" id="ci-${v.id}" placeholder="Comment ezhuthu..." onkeydown="if(event.key==='Enter')addCmt('${v.id}')"><button class="btn btn-sm btn-p" onclick="addCmt('${v.id}')"><i class="ti ti-send"></i></button></div></div></div>`;
+}
+
+window.markDone=async function(id){const v=visits.find(x=>x.id===id);if(!v)return;await saveVisitDB({...v,fdate:'',stage:'Closed'});toast('Done! ✓');}
+window.setND=async function(id){const nd=document.getElementById('nfd-'+id)?.value;if(!nd){toast('Date select cheyyuka!');return;}const v=visits.find(x=>x.id===id);if(!v)return;await saveVisitDB({...v,fdate:nd});toast('Set: '+nd);}
+window.clearND=async function(id){const v=visits.find(x=>x.id===id);if(!v)return;await saveVisitDB({...v,fdate:''});toast('Date removed');}
+window.tgEdit=function(id){const e=document.getElementById('ep-'+id),o=e.style.display==='block';e.style.display=o?'none':'block';if(!o)document.getElementById('cb-'+id).style.display='none';}
+window.tgCmt=function(id){const e=document.getElementById('cb-'+id),o=e.style.display==='block';e.style.display=o?'none':'block';if(!o){const ep=document.getElementById('ep-'+id);if(ep)ep.style.display='none';setTimeout(()=>document.getElementById('ci-'+id)?.focus(),80);}}
+window.saveEdit=async function(id){const v=visits.find(x=>x.id===id);if(!v)return;const updated={...v,stage:document.getElementById('es-'+id)?.value||v.stage,temp:document.getElementById('et-'+id)?.value||'',contact:document.getElementById('ec-'+id)?.value.trim()||v.contact,product:document.getElementById('epr-'+id)?.value.trim()||v.product,remarks:document.getElementById('erm-'+id)?.value.trim()||''};await saveVisitDB(updated);toast('Update aayittu!');document.getElementById('ep-'+id).style.display='none';}
+
+function rCmts(id){const c=cmts[id]||[];if(!c.length)return '<div style="font-size:12px;color:var(--tx2);padding:4px 0">Comment illatha</div>';return c.map(x=>`<div class="citem"><div class="cmeta">${x.author} · ${x.date}</div><div class="ctxt">${x.text}</div></div>`).join('');}
+window.addCmt=async function(id){const inp=document.getElementById('ci-'+id);const txt=inp?.value?.trim();if(!txt)return;const list=[...(cmts[id]||[]),{text:txt,date:today,author:me||'Staff'}];inp.value='';await saveCmtDB(id,list);document.getElementById('cl-'+id).innerHTML=rCmts(id);toast('Comment saved!');}
+
+window.openAdd=function(){
+  if(myRole==='supervisor'&&!window._salesMode)return;
+  document.getElementById('eid').value='';
+  document.getElementById('mtitle').textContent=myRole==='marketing'?'New Field Visit':'New Visit';
+  document.getElementById('fd').value=today;
+  ['fn','fp','fc','fprod','frmk','ffdt'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('fcat').value='Customer';
+  document.getElementById('fsrc').value=myRole==='marketing'?'Field Visit':'Walk-in';
+  document.getElementById('fstg').value='Pending';
+  document.getElementById('ftmp').value='';
+  // Marketing: show visit type selector, hide follow-up date, show photos
+  const ffdtRow=document.getElementById('ffdt')?.closest('.fgrp');
+  if(ffdtRow) ffdtRow.style.display='block'; // Show for all roles including marketing
+  document.getElementById('mkt-type-wrap').style.display=myRole==='marketing'?'block':'none';
+  document.getElementById('influencer-type-wrap').style.display='none';
+  document.getElementById('finf-company').value='';
+  // Default: customer selected
+  window._mktVisitType='customer';
+  document.getElementById('vtype-customer').classList.add('vtype-sel');
+  document.getElementById('vtype-influencer').classList.remove('vtype-sel');
+  document.getElementById('photo-wrap').style.display=myRole==='marketing'?'block':'none';
+  // Show GPS button for marketing
+  document.getElementById('gps-btn').style.display=myRole==='marketing'?'inline-flex':'none';
+  document.getElementById('gps-status').style.display='none';
+  // Auto-fill location if already have GPS
+  if(myRole==='marketing'&&window._lastGPS){
+    const {lat,lng,acc}=window._lastGPS;
+    document.getElementById('gps-status').style.display='block';
+    document.getElementById('gps-status').textContent='📍 Auto location edukkunnu...';
+    document.getElementById('gps-status').style.color='var(--atxt)';
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,{headers:{'Accept-Language':'en'}})
+      .then(r=>r.json()).then(d=>{
+        const a=d.address||{};
+        const parts=[a.road||a.neighbourhood,a.suburb||a.village||a.town||a.city_district,a.city||a.county,a.state].filter(Boolean);
+        const addr=parts.slice(0,3).join(', ')||`${lat.toFixed(4)},${lng.toFixed(4)}`;
+        const fp=document.getElementById('fp');
+        fp.value=addr;fp.dataset.lat=lat;fp.dataset.lng=lng;
+        document.getElementById('gps-status').textContent=`✅ Auto: ${addr} (±${Math.round(acc||0)}m)`;
+        document.getElementById('gps-status').style.color='var(--gtxt)';
+      }).catch(()=>{
+        const fp=document.getElementById('fp');
+        fp.value=`${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        fp.dataset.lat=lat;fp.dataset.lng=lng;
+        document.getElementById('gps-status').textContent='✅ GPS auto-filled';
+        document.getElementById('gps-status').style.color='var(--gtxt)';
+      });
+  }
+  document.getElementById('photo-previews').innerHTML='';
+  document.getElementById('photo-input').value='';
+  window._photos=[];
+  document.getElementById('mkt-suggest-wrap').style.display='none';
+  document.getElementById('vmodal').classList.add('open');
+}
+window.editV=function(id){if(myRole==='supervisor'&&!window._salesMode)return;const v=visits.find(x=>x.id===id);if(!v)return;document.getElementById('eid').value=id;document.getElementById('mtitle').textContent='Edit Visit';document.getElementById('fd').value=v.date||today;document.getElementById('fn').value=v.name||'';document.getElementById('fp').value=v.place||'';document.getElementById('fc').value=v.contact||'';document.getElementById('fprod').value=v.product||'';document.getElementById('frmk').value=v.remarks||'';document.getElementById('ffdt').value=v.fdate||'';document.getElementById('fcat').value=v.category||'Customer';document.getElementById('fsrc').value=v.source||'Walk-in';document.getElementById('fstg').value=v.stage||'Pending';document.getElementById('ftmp').value=v.temp||'';document.getElementById('vmodal').classList.add('open');}
+window.saveVisit=async function(){
+  if(myRole==='supervisor'&&!window._salesMode)return;
+  const name=document.getElementById('fn').value.trim(),date=document.getElementById('fd').value;
+  if(!name||!date){toast('Name, date venam!');return;}
+
+  // GPS mandatory for marketing
+  const fpEl=document.getElementById('fp');
+  const hasGPS=fpEl.dataset.lat&&fpEl.dataset.lat!=='';
+  if(myRole==='marketing'&&!hasGPS){
+    // Show warning — allow override
+    const proceed=confirm('⚠️ GPS location add cheyyaathathu!\n\nLocation illaathe save cheyyano?\n\n"OK" — GPS koode save cheyyunnu\n"Cancel" — GPS add cheyyuka');
+    if(!proceed){
+      document.getElementById('gps-btn').style.background='#FAECE7';
+      document.getElementById('gps-btn').style.color='#993C1D';
+      document.getElementById('gps-status').textContent='⚠️ GPS location add cheyyuka!';
+      document.getElementById('gps-status').style.display='block';
+      document.getElementById('gps-status').style.color='var(--rtxt)';
+      return;
+    }
+  }
+
+  const id=document.getElementById('eid').value||'v'+Date.now();
+  const mktRef=document.getElementById('mkt-ref-select')?.value||'';
+  const isInfluencer=myRole==='marketing'&&window._mktVisitType==='influencer';
+  const photos=window._photos||[];
+  toast('Saving...');
+  const v={id,date,name,
+    place:fpEl.value.trim(),
+    gpsLat:fpEl.dataset.lat||'',
+    gpsLng:fpEl.dataset.lng||'',
+    contact:document.getElementById('fc').value.trim(),
+    category:isInfluencer?document.getElementById('finf-type').value:document.getElementById('fcat').value,
+    company:isInfluencer?document.getElementById('finf-company')?.value.trim():'',
+    assisted:me,custof:me,
+    product:document.getElementById('fprod').value.trim(),
+    source:document.getElementById('fsrc').value,
+    stage:document.getElementById('fstg').value,
+    temp:document.getElementById('ftmp').value,
+    remarks:document.getElementById('frmk').value.trim(),
+    fdate:document.getElementById('ffdt').value, // follow-up for all roles
+    visitType:myRole==='marketing'?(isInfluencer?'influencer-visit':'field-visit'):'shop-visit',
+    marketingRef:mktRef||'',
+    photos
+  };
+  await saveVisitDB(v);closeModal();toast('Saved! ✓');
+}
+
+window.setVisitType=function(type){
+  window._mktVisitType=type;
+  document.getElementById('vtype-customer').classList.toggle('vtype-sel',type==='customer');
+  document.getElementById('vtype-influencer').classList.toggle('vtype-sel',type==='influencer');
+  document.getElementById('influencer-type-wrap').style.display=type==='influencer'?'block':'none';
+  document.getElementById('mtitle').textContent=type==='influencer'?'Architect / Contractor Visit':'Customer Field Visit';
+}
+window._mktVisitType='customer';
+
+window._photos=[];
+
+// GPS Location
+// ---- PIN MANAGEMENT ----
+window.openPinChange=function(){
+  document.getElementById('pin-current').value='';
+  document.getElementById('pin-new').value='';
+  document.getElementById('pin-confirm').value='';
+  document.getElementById('pin-err').style.display='none';
+  document.getElementById('pin-modal').classList.add('open');
+}
+window.closePinModal=function(){document.getElementById('pin-modal').classList.remove('open');}
+window.savePin=async function(){
+  const cur=document.getElementById('pin-current').value.trim();
+  const nw=document.getElementById('pin-new').value.trim();
+  const conf=document.getElementById('pin-confirm').value.trim();
+  const errEl=document.getElementById('pin-err');
+  const s=staff.find(x=>x.name===me);
+  if(!s){return;}
+  const correctPin=s.pin||'1234';
+  if(cur!==correctPin){errEl.textContent='Current PIN incorrect!';errEl.style.display='block';return;}
+  if(!/^\d{4}$/.test(nw)){errEl.textContent='New PIN 4 digits venam!';errEl.style.display='block';return;}
+  if(nw!==conf){errEl.textContent='New PIN match cheyyunilla!';errEl.style.display='block';return;}
+  // Save to Firebase
+  const updated={...s,pin:nw};
+  try{
+    
+    // Use existing db — access via global
+    await window._saveStaffPin(updated);
+    closePinModal();
+    toast('PIN change aayittu! ✓');
+  }catch(e){errEl.textContent='Save error — retry cheyyuka';errEl.style.display='block';}
+}
+document.getElementById('pin-modal').addEventListener('click',e=>{if(e.target.id==='pin-modal')closePinModal();});
+
+window._salesMode=false;
+window._dayStartTime=null;
+window._dayTimerInterval=null;
+
+// Show day tracker for marketing
+function initDayTracker(){
+  if(myRole!=='marketing') return;
+  document.getElementById('day-tracker').style.display='block';
+  // Restore session if day already started
+  try{
+    const saved=JSON.parse(localStorage.getItem('cvt_day_'+me+'_'+today)||'null');
+    if(saved&&saved.startTime&&!saved.endTime){
+      window._dayStartTime=new Date(saved.startTime);
+      document.getElementById('day-not-started').style.display='none';
+      document.getElementById('day-started').style.display='block';
+      document.getElementById('day-start-info').textContent='Started: '+new Date(saved.startTime).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+(saved.startPlace?' · '+saved.startPlace:'');
+      startDayTimer();
+      updateDaySummary();
+    }
+  }catch(e){}
+}
+
+window.dayStart=async function(){
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  let place='';
+  // Get GPS
+  if(navigator.geolocation&&window._lastGPS){
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${window._lastGPS.lat}&lon=${window._lastGPS.lng}&format=json`,{headers:{'Accept-Language':'en'}});
+      const d=await r.json();
+      const a=d.address||{};
+      place=[a.suburb||a.village||a.town||a.city_district,a.city||a.county].filter(Boolean).join(', ');
+    }catch(e){}
+  }
+  window._dayStartTime=now;
+  const data={startTime:now.toISOString(),startPlace:place,endTime:null};
+  try{localStorage.setItem('cvt_day_'+me+'_'+today,JSON.stringify(data));}catch(e){}
+  // Save to Firebase
+  try{
+    
+    await setDoc(doc(db,'daylog',me+'_'+today),{staff:me,date:today,startTime:now.toISOString(),startPlace:place,endTime:null,endPlace:''});
+  }catch(e){}
+  document.getElementById('day-not-started').style.display='none';
+  document.getElementById('day-started').style.display='block';
+  document.getElementById('day-start-info').textContent='Started: '+timeStr+(place?' · '+place:'');
+  startDayTimer();
+  toast('Day started! ✓ '+timeStr);
+}
+
+function startDayTimer(){
+  if(window._dayTimerInterval) clearInterval(window._dayTimerInterval);
+  window._dayTimerInterval=setInterval(()=>{
+    if(!window._dayStartTime)return;
+    const diff=Math.floor((new Date()-window._dayStartTime)/1000);
+    const h=Math.floor(diff/3600),m=Math.floor((diff%3600)/60);
+    document.getElementById('day-timer').textContent=h+':'+(m<10?'0':'')+m;
+    updateDaySummary();
+  },10000);
+  updateDaySummary();
+}
+
+function updateDaySummary(){
+  if(!window._dayStartTime)return;
+  const todayVisits=myV().filter(v=>v.date===today);
+  document.getElementById('day-visit-count').textContent=todayVisits.length;
+  const diff=Math.floor((new Date()-window._dayStartTime)/1000);
+  const h=Math.floor(diff/3600),m=Math.floor((diff%3600)/60);
+  document.getElementById('day-hours').textContent=h+'h '+m+'m';
+  // Calculate km from today's visits GPS
+  const gpsVisits=todayVisits.filter(v=>v.gpsLat&&v.gpsLng);
+  let km=0;
+  for(let i=1;i<gpsVisits.length;i++){
+    const p=gpsVisits[i-1],c=gpsVisits[i];
+    const R=6371,dLat=(parseFloat(c.gpsLat)-parseFloat(p.gpsLat))*Math.PI/180,dLng=(parseFloat(c.gpsLng)-parseFloat(p.gpsLng))*Math.PI/180;
+    const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(parseFloat(p.gpsLat)*Math.PI/180)*Math.cos(parseFloat(c.gpsLat)*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+    km+=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+  document.getElementById('day-km').textContent=km>0?km.toFixed(1)+' km':'— km';
+}
+
+window.dayEnd=async function(){
+  if(!window._dayStartTime){toast('Day start cheyyaathathu!');return;}
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  let endPlace='';
+  if(navigator.geolocation&&window._lastGPS){
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${window._lastGPS.lat}&lon=${window._lastGPS.lng}&format=json`,{headers:{'Accept-Language':'en'}});
+      const d=await r.json();const a=d.address||{};
+      endPlace=[a.suburb||a.village||a.town,a.city||a.county].filter(Boolean).join(', ');
+    }catch(e){}
+  }
+  const diff=Math.floor((now-window._dayStartTime)/1000);
+  const h=Math.floor(diff/3600),m=Math.floor((diff%3600)/60);
+  const todayVisits=myV().filter(v=>v.date===today);
+  // Save end time
+  try{
+    const saved=JSON.parse(localStorage.getItem('cvt_day_'+me+'_'+today)||'{}');
+    saved.endTime=now.toISOString();saved.endPlace=endPlace;
+    localStorage.setItem('cvt_day_'+me+'_'+today,JSON.stringify(saved));
+  }catch(e){}
+  try{
+    
+    const saved=JSON.parse(localStorage.getItem('cvt_day_'+me+'_'+today)||'{}');
+    await setDoc(doc(db,'daylog',me+'_'+today),{staff:me,date:today,startTime:saved.startTime,startPlace:saved.startPlace||'',endTime:now.toISOString(),endPlace,totalVisits:todayVisits.length,totalHours:h+(m/60),totalHoursStr:h+'h '+m+'m'});
+  }catch(e){}
+  clearInterval(window._dayTimerInterval);
+  // Show summary alert
+  alert(`✅ Day End Summary\n\n⏰ Field Time: ${h}h ${m}m\n📍 Visits: ${todayVisits.length}\n🕐 End Time: ${timeStr}${endPlace?' · '+endPlace:''}\n\nNalla work! 👍`);
+  document.getElementById('day-started').style.display='none';
+  document.getElementById('day-not-started').style.display='block';
+  window._dayStartTime=null;
+  toast('Day ended! '+timeStr);
+}
+
+window.toggleSalesMode=function(){
+  window._salesMode=!window._salesMode;
+  const btn=document.getElementById('sales-mode-btn');
+  const supBanner=document.getElementById('sup-banner');
+  if(window._salesMode){
+    // Sales mode ON
+    btn.textContent='Switch to Supervisor Mode';
+    btn.style.background='#534AB7';btn.style.color='#fff';btn.style.borderColor='#534AB7';
+    supBanner.style.background='#EEEDFE';supBanner.style.borderBottomColor='#c9c5f5';supBanner.style.color='#3C3489';
+    document.getElementById('fab').style.display='flex';
+    toast('Sales Mode — Visit add cheyyaavunnu ✓');
+  } else {
+    // Supervisor mode
+    btn.textContent='Switch to Sales Mode';
+    btn.style.background='#fff';btn.style.color='#2D6A0A';btn.style.borderColor='#5DCAA5';
+    supBanner.style.background='#E8F5E2';supBanner.style.borderBottomColor='#b7e0a0';supBanner.style.color='#2D6A0A';
+    document.getElementById('fab').style.display='none';
+    toast('Supervisor Mode');
+  }
+  renderPage();
+}
+
+// ---- LOCATION PERMISSION & AUTO-FILL ----
+window._lastGPS = null; // cache last known position
+
+function initLocationPermission(){
+  if(!navigator.geolocation) return;
+  // Check if already granted
+  if(navigator.permissions){
+    navigator.permissions.query({name:'geolocation'}).then(result=>{
+      if(result.state==='granted'){
+        startWatchingLocation();
+      } else if(result.state==='prompt'){
+        // Show friendly banner asking permission
+        showLocationBanner();
+      }
+      // 'denied' — do nothing, manual GPS button still works
+      result.onchange=()=>{
+        if(result.state==='granted') startWatchingLocation();
+      };
+    }).catch(()=>showLocationBanner());
+  } else {
+    showLocationBanner();
+  }
+}
+
+function showLocationBanner(){
+  const existing=document.getElementById('loc-banner');
+  if(existing) return;
+  const banner=document.createElement('div');
+  banner.id='loc-banner';
+  banner.style.cssText='background:#FEF3C7;border-bottom:1px solid #F5D86E;padding:10px 14px;display:flex;align-items:center;gap:10px';
+  banner.innerHTML=`
+    <i class="ti ti-map-pin" style="font-size:22px;color:#92400E;flex-shrink:0"></i>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:#92400E">Location auto-fill enable cheyyano?</div>
+      <div style="font-size:11px;color:#B45309;margin-top:1px">Visit add cheyyumbol automatic location fill aavunnu</div>
+    </div>
+    <button onclick="requestLocationNow()" style="padding:7px 12px;background:#F59E0B;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Enable</button>
+    <button onclick="document.getElementById('loc-banner').remove()" style="border:none;background:none;cursor:pointer;color:#92400E;font-size:18px;padding:4px">×</button>`;
+  // Insert after sup-banner
+  const supBanner=document.getElementById('sup-banner');
+  supBanner.parentNode.insertBefore(banner, supBanner.nextSibling);
+}
+
+window.requestLocationNow=function(){
+  const banner=document.getElementById('loc-banner');
+  if(banner) banner.remove();
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      window._lastGPS={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy};
+      startWatchingLocation();
+      toast('📍 Location permission granted! Auto-fill on aayittu ✓');
+    },
+    ()=>{ toast('Location permission deny aayittu — Manual GPS button use cheyyaavunnu'); },
+    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+  );
+}
+
+function startWatchingLocation(){
+  if(window._gpsWatcher) return; // already watching
+  if(!navigator.geolocation) return;
+  window._gpsWatcher=navigator.geolocation.watchPosition(
+    pos=>{
+      window._lastGPS={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy};
+    },
+    ()=>{},
+    {enableHighAccuracy:true,timeout:30000,maximumAge:60000}
+  );
+}
+
+window.getGPS=async function(){
+  const btn=document.getElementById('gps-btn');
+  const status=document.getElementById('gps-status');
+  const fp=document.getElementById('fp');
+  if(!navigator.geolocation){toast('GPS support illatha');return;}
+  btn.innerHTML='<i class="ti ti-loader" style="font-size:14px;vertical-align:-2px;animation:gpspin 1s linear infinite"></i> Locating...';
+  btn.disabled=true;
+  status.style.display='block';
+  status.textContent='GPS location edukkunnu...';
+  status.style.color='var(--atxt)';
+  navigator.geolocation.getCurrentPosition(
+    async pos=>{
+      const {latitude:lat,longitude:lng,accuracy}=pos.coords;
+      status.textContent=`📍 Coordinates kitti (±${Math.round(accuracy)}m) — Address edukkunnu...`;
+      try{
+        const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,{headers:{'Accept-Language':'en'}});
+        const d=await r.json();
+        const a=d.address||{};
+        const parts=[a.road||a.neighbourhood,a.suburb||a.village||a.town||a.city_district,a.city||a.county,a.state].filter(Boolean);
+        const addr=parts.slice(0,3).join(', ');
+        fp.value=addr||`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        fp.dataset.lat=lat;fp.dataset.lng=lng;
+        status.textContent='✅ Location: '+fp.value;
+        status.style.color='var(--gtxt)';
+      }catch(e){
+        fp.value=`${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        status.textContent='✅ GPS coordinates saved';
+        status.style.color='var(--gtxt)';
+      }
+      btn.innerHTML='<i class="ti ti-map-pin" style="font-size:14px;vertical-align:-2px"></i> GPS';
+      btn.disabled=false;
+    },
+    err=>{
+      const msg={1:'Permission deny — Settings-il location allow cheyyuka',2:'Location kittiyilla — retry',3:'Timeout — retry'}[err.code]||'Error';
+      status.textContent='❌ '+msg;status.style.color='var(--rtxt)';
+      btn.innerHTML='<i class="ti ti-map-pin" style="font-size:14px;vertical-align:-2px"></i> GPS';
+      btn.disabled=false;
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+}
+const _gpsStyle=document.createElement('style');
+_gpsStyle.textContent='@keyframes gpspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+document.head.appendChild(_gpsStyle);
+
+window.handlePhotos=function(input){
+  const files=[...input.files].slice(0,2);
+  const prevEl=document.getElementById('photo-previews');
+  prevEl.innerHTML='<div style="font-size:12px;color:var(--tx2)">Compressing...</div>';
+  window._photos=[];
+  let done=0;
+  if(!files.length){prevEl.innerHTML='';return;}
+  files.forEach((file,i)=>{
+    const reader=new FileReader();
+    reader.onload=function(e){
+      // Compress via canvas
+      const img=new Image();
+      img.onload=function(){
+        const canvas=document.createElement('canvas');
+        const MAX=800;
+        let w=img.width,h=img.height;
+        if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+        if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        const b64=canvas.toDataURL('image/jpeg',0.6);
+        window._photos[i]=b64;
+        done++;
+        if(done===files.length){
+          prevEl.innerHTML=window._photos.map((p,idx)=>`
+            <div style="position:relative;display:inline-block">
+              <img src="${p}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr)">
+              <button onclick="removePhoto(${idx})" style="position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--rtxt);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+            </div>`).join('');
+        }
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+window.removePhoto=function(i){
+  window._photos.splice(i,1);
+  document.getElementById('photo-previews').innerHTML=window._photos.map((p,idx)=>`
+    <div style="position:relative;display:inline-block">
+      <img src="${p}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr)">
+      <button onclick="removePhoto(${idx})" style="position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--rtxt);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+    </div>`).join('');
+}
+
+// Check contact number for marketing visits (sales staff only)
+function checkMktSuggest(){
+  if(myRole!=='staff'&&myRole!=='')return;
+  const contact=document.getElementById('fc').value.trim();
+  if(contact.length<6){document.getElementById('mkt-suggest-wrap').style.display='none';return;}
+  // Check field visits by contact
+  const mktVisits=visits.filter(v=>v.contact===contact&&(v.visitType==='field-visit'||v.visitType==='influencer-visit'));
+  if(!mktVisits.length){document.getElementById('mkt-suggest-wrap').style.display='none';return;}
+  document.getElementById('mkt-suggest-wrap').style.display='block';
+  document.getElementById('mkt-suggest-list').innerHTML=mktVisits.map(v=>{
+    const isInf=v.visitType==='influencer-visit';
+    return `<div style="font-size:12px;color:#92400E;margin-bottom:3px">${isInf?'🏢':'📍'} ${v.name}${v.company?' ('+v.company+')':''} — ${v.assisted} (${v.date})</div>`;
+  }).join('');
+  const sel=document.getElementById('mkt-ref-select');
+  sel.innerHTML='<option value="">— Link cheyyanda —</option>'+mktVisits.map(v=>`<option value="${v.assisted}">${v.assisted} — ${v.name}${v.company?' ('+v.company+')':''} (${v.date})</option>`).join('');
+}
+document.getElementById('fc').addEventListener('input',checkMktSuggest);
+window.closeModal=function(){document.getElementById('vmodal').classList.remove('open');}
+document.getElementById('vmodal').addEventListener('click',e=>{if(e.target.id==='vmodal')closeModal();});
+
+function updDot(){if(!me)return;const u=myF().filter(v=>v.fdate<=today).length;const d=document.getElementById('ndot');if(d)d.style.display=u?'block':'none';}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2200);}
+window.viewPhoto=function(src){const lb=document.getElementById('lightbox');document.getElementById('lightbox-img').src=src;lb.classList.add('open');}
+
+// Notifications
+function initNotifs(){
+  if(!('Notification' in window))return;
+  if(Notification.permission==='default')document.getElementById('notif-banner').style.display='block';
+  else if(Notification.permission==='granted')scheduleNotifs();
+}
+window.reqNotif=async function(){
+  document.getElementById('notif-banner').style.display='none';
+  if(!('Notification' in window)){toast('Browser support cheyyunilla');return;}
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){toast('Notifications enabled! ✓');scheduleNotifs();}else toast('Permission deny aayittu');
+}
+function scheduleNotifs(){
+  if(!('Notification' in window)||Notification.permission!=='granted'||!me)return;
+  if(window._notifTimers)window._notifTimers.forEach(t=>clearTimeout(t));
+  window._notifTimers=[];
+  const now=new Date();
+  if(myRole==='supervisor'){
+    // Supervisor: team notifications at 9:35am and 5pm
+    [{h:9,m:35},{h:17,m:0}].forEach(({h,m})=>{
+      const fire=new Date();fire.setHours(h,m,0,0);const ms=fire-now;
+      if(ms>0){window._notifTimers.push(setTimeout(()=>{
+        // Team follow-ups (non-sales mode visits)
+        const teamV=visits.filter(v=>myTeam.includes(v.assisted));
+        const ov=teamV.filter(v=>needsFollowup(v)&&v.fdate<today);
+        const td=teamV.filter(v=>needsFollowup(v)&&v.fdate===today);
+        if(ov.length||td.length){
+          const byStaff={};[...ov,...td].forEach(v=>{if(!byStaff[v.assisted])byStaff[v.assisted]=[];byStaff[v.assisted].push(v.name);});
+          const summary=Object.entries(byStaff).map(([s,n])=>`${s}: ${n.slice(0,2).join(', ')}${n.length>2?' +'+(n.length-2):''}`).join('\n');
+          new Notification(`🔔 Team Follow-up Alert — ${me}`,{body:`${ov.length} overdue, ${td.length} today:\n${summary}`,tag:'sup-'+h+m+'-'+today,requireInteraction:true});
+        }
+        // Own follow-ups (sales mode visits)
+        const myOwn=visits.filter(v=>v.assisted===me&&needsFollowup(v)&&v.fdate<=today);
+        if(myOwn.length){
+          new Notification(`📅 Your Follow-ups — ${me}`,{body:myOwn.length+' follow-up(s): '+myOwn.slice(0,3).map(v=>v.name).join(', '),tag:'sup-own-'+h+m+'-'+today});
+        }
+      },ms));}
+    });
+    // Immediate overdue alert
+    const ov=myF().filter(v=>v.fdate<today);
+    if(ov.length&&!sessionStorage.getItem('supod_'+me+'_'+today)){
+      sessionStorage.setItem('supod_'+me+'_'+today,'1');
+      setTimeout(()=>{
+        if(!('Notification' in window)||Notification.permission!=='granted')return;
+        const byStaff={};ov.forEach(v=>{if(!byStaff[v.assisted])byStaff[v.assisted]=[];byStaff[v.assisted].push(v.name);});
+        const summary=Object.entries(byStaff).map(([s,n])=>`${s}: ${n.join(', ')}`).join('\n');
+        new Notification(`⚠️ Overdue Follow-ups — Team (${me})`,{body:`${ov.length} overdue:\n${summary}`,tag:'supod-'+today,requireInteraction:true});
+      },2000);
+    }
+  } else {
+    // Regular staff AND marketing: 9:35am, 11am, 1pm, 3pm, 5pm
+    [{h:9,m:35},{h:11,m:0},{h:13,m:0},{h:15,m:0},{h:17,m:0}].forEach(({h,m})=>{
+      const fire=new Date();fire.setHours(h,m,0,0);const ms=fire-now;
+      if(ms>0){window._notifTimers.push(setTimeout(()=>{
+        const cur=myV().filter(v=>v.fdate===today&&needsFollowup(v));
+        if(!cur.length||!('Notification' in window)||Notification.permission!=='granted')return;
+        new Notification('📅 Follow-up — '+me,{body:cur.length+' follow-up(s): '+cur.slice(0,3).map(v=>v.name+(v.temp?' ('+v.temp+')':'')).join(', '),tag:'fup-'+h+m+'-'+today});
+      },ms));}
+    });
+    const ov=myV().filter(v=>needsFollowup(v)&&v.fdate<today);
+    if(ov.length&&!sessionStorage.getItem('od_'+me+'_'+today)){
+      sessionStorage.setItem('od_'+me+'_'+today,'1');
+      setTimeout(()=>{if(!('Notification' in window)||Notification.permission!=='granted')return;new Notification('⚠️ Overdue — '+me,{body:ov.length+' overdue: '+ov.slice(0,2).map(v=>v.name).join(', '),tag:'od-'+today,requireInteraction:true});},2000);
+    }
+  }
+}
+</script>
+<!-- PIN CHANGE MODAL -->
+<div class="mwrap" id="pin-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">PIN Change</div>
+    <div style="font-size:13px;color:var(--tx2);margin-bottom:16px">Ningalude PIN change cheyyuka</div>
+    <div class="fgrp">
+      <label>Current PIN</label>
+      <input type="password" id="pin-current" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="● ● ● ●" style="font-size:20px;letter-spacing:6px;text-align:center">
+    </div>
+    <div class="fgrp">
+      <label>New PIN (4 digits)</label>
+      <input type="password" id="pin-new" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="● ● ● ●" style="font-size:20px;letter-spacing:6px;text-align:center">
+    </div>
+    <div class="fgrp">
+      <label>Confirm New PIN</label>
+      <input type="password" id="pin-confirm" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="● ● ● ●" style="font-size:20px;letter-spacing:6px;text-align:center">
+    </div>
+    <div id="pin-err" style="display:none;background:var(--rlt);color:var(--rtxt);padding:8px 12px;border-radius:var(--rsm);font-size:13px;margin-bottom:10px"></div>
+    <div class="mact">
+      <button class="btn" onclick="closePinModal()">Cancel</button>
+      <button class="btn btn-p" onclick="savePin()"><i class="ti ti-lock-check"></i> Save PIN</button>
+    </div>
+  </div>
+</div>
+
+<div class="photo-lightbox" id="lightbox" onclick="this.classList.remove('open')">
+  <img id="lightbox-img" src="" alt="Photo">
+</div>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}</script>
+</body>
+</html>
