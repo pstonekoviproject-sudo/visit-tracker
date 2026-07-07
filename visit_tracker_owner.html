@@ -11,6 +11,8 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>P Stone Coimbatore — Owner</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('hfhtXTCgQd7ELHqMe');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
@@ -431,8 +433,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-hei
       <div id="admin-section" style="display:none">
         <div class="card" style="margin-bottom:10px;border-color:#A7F3D0">
           <div class="card-title" style="color:var(--green)"><i class="ti ti-download"></i> Backup Data</div>
-          <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">Download all data as JSON file. Save it safely.</div>
-          <button class="btn btn-green" style="width:100%;justify-content:center" onclick="downloadBackup()"><i class="ti ti-download"></i> Download Backup Now</button>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:13px;color:var(--tx2)">Last backup:</div>
+            <div id="backup-status" style="font-size:13px;font-weight:600"></div>
+          </div>
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">Download all data as JSON. Save to Google Drive or email yourself.</div>
+          <button class="btn btn-green" style="width:100%;justify-content:center;margin-bottom:8px" onclick="downloadBackup()"><i class="ti ti-download"></i> Download Backup Now</button>
+          <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="sendEmailBackup()"><i class="ti ti-mail"></i> Email Backup Now</button>
+          <div style="font-size:11px;color:var(--tx3);margin-top:8px;text-align:center">Auto email daily at 6:30 PM → pathiyaragrandeurllp@gmail.com</div>
         </div>
         <div class="card" style="margin-bottom:10px;border-color:#FCA5A5">
           <div class="card-title" style="color:var(--red)"><i class="ti ti-upload"></i> Restore from Backup</div>
@@ -1158,13 +1166,129 @@ window.renderRoute=function(){
 }
 
 // BACKUP & RESTORE
-window.downloadBackup=async function(){
-  toast('Preparing backup...');
-  const backup={version:1,date:new Date().toISOString(),visits,staff,comments:cmts};
+// ---- EMAIL BACKUP ----
+const EMAILJS_SVC='service_bat3rl7',EMAILJS_TPL='template_z6iol5p',OWNER_EMAIL='pathiyaragrandeurllp@gmail.com';
+
+async function sendEmailBackup(auto=false){
+  try{
+    const backupData={version:2,date:new Date().toISOString(),visits,staff,comments:cmts};
+    const dataStr=JSON.stringify(backupData);
+    // Split into chunks if too large (EmailJS limit ~50KB)
+    const preview=`Visits: ${visits.length}, Staff: ${staff.length}, Comments: ${Object.keys(cmts).length} records`;
+    await emailjs.send(EMAILJS_SVC,EMAILJS_TPL,{
+      to_email:OWNER_EMAIL,
+      date:new Date().toLocaleString('en-IN',{dateStyle:'full',timeStyle:'short'}),
+      total_visits:visits.length,
+      total_staff:staff.length,
+      backup_data:dataStr.length>40000?preview+'\n\n[Data too large — please use Download Backup for full data]':dataStr
+    });
+    localStorage.setItem('cvt_last_email_backup',today);
+    localStorage.setItem('cvt_last_backup',today);
+    updateBackupStatus();
+    if(!auto)toast('📧 Backup email sent ✓');
+    else toast('📧 Daily backup emailed ✓');
+    return true;
+  }catch(err){
+    console.error('Email backup failed:',err);
+    if(!auto)toast('Email failed — downloading locally...');
+    downloadBackup(auto);
+    return false;
+  }
+}
+
+function checkDailyEmailBackup(){
+  const last=localStorage.getItem('cvt_last_email_backup');
+  if(last===today)return; // Already sent today
+  // Schedule at 7PM daily
+  const now=new Date(),fire=new Date();
+  fire.setHours(18,30,0,0);
+  let ms=fire-now;
+  if(ms<0)ms+=86400000; // Tomorrow
+  if(window._emailBackupTimer)clearTimeout(window._emailBackupTimer);
+  window._emailBackupTimer=setTimeout(async()=>{
+    await sendEmailBackup(true);
+    checkDailyEmailBackup(); // Schedule next day
+  },ms);
+  // If not backed up today and it's past 7PM, send now
+  if(now.getHours()>=18&&now.getMinutes()>=30||now.getHours()>=19&&last!==today){
+    setTimeout(()=>sendEmailBackup(true),5000);
+  }
+}
+
+window.downloadBackup=async function(auto=false){
+  if(!auto) toast('Preparing backup...');
+  const backup={
+    version:2,
+    date:new Date().toISOString(),
+    appName:'P Stone Coimbatore Visit Tracker',
+    totalVisits:visits.length,
+    totalStaff:staff.length,
+    visits,staff,comments:cmts
+  };
   const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='pstone_backup_'+today+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  toast('Backup downloaded ✓');
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='pstone_backup_'+today+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  // Save last backup date
+  localStorage.setItem('cvt_last_backup',today);
+  updateBackupStatus();
+  if(!auto) toast('Backup downloaded ✓');
+  else toast('⬇️ Auto backup downloaded!');
+}
+
+function updateBackupStatus(){
+  const last=localStorage.getItem('cvt_last_backup');
+  const el=document.getElementById('backup-status');
+  if(!el)return;
+  if(!last){
+    el.innerHTML='<span style="color:var(--red)">⚠️ Never backed up!</span>';
+  } else {
+    const diff=Math.round((new Date(today)-new Date(last))/86400000);
+    const col=diff>=7?'var(--red)':diff>=3?'var(--amber)':'var(--green)';
+    el.innerHTML=`<span style="color:${col}">${diff===0?'✅ Today':diff===1?'Yesterday':diff+' days ago'}</span>`;
+  }
+}
+
+function checkAutoBackup(){
+  const last=localStorage.getItem('cvt_last_backup');
+  if(!last){
+    // Never backed up — show urgent banner
+    showBackupBanner('urgent');
+    return;
+  }
+  const diff=Math.round((new Date(today)-new Date(last))/86400000);
+  if(diff>=7) showBackupBanner('weekly');
+  else if(diff>=3) showBackupBanner('reminder');
+}
+
+function showBackupBanner(type){
+  const existing=document.getElementById('backup-banner');
+  if(existing)return;
+  const msgs={
+    urgent:{bg:'#FEE2E2',border:'#FCA5A5',color:'#991B1B',icon:'ti-alert-triangle',text:'Data backup cheyyaathathu! Backup cheyyuka — data loss avoid cheyyaan',btn:'Backup Now'},
+    weekly:{bg:'#FEF3C7',border:'#FDE68A',color:'#92400E',icon:'ti-calendar-event',text:'7 days aayi backup cheyyaathathu. Weekly backup important aanu!',btn:'Backup Now'},
+    reminder:{bg:'#EBF1FD',border:'#BDD0F9',color:'#1E40AF',icon:'ti-bell',text:'3 days aayi backup cheyyaathathu. Ippol backup cheyyuka.',btn:'Backup'}
+  };
+  const m=msgs[type]||msgs.reminder;
+  const b=document.createElement('div');
+  b.id='backup-banner';
+  b.style.cssText=`background:${m.bg};border-bottom:1px solid ${m.border};padding:10px 16px;display:flex;align-items:center;gap:10px`;
+  b.innerHTML=`<i class="ti ${m.icon}" style="font-size:20px;color:${m.color};flex-shrink:0"></i><div style="flex:1"><div style="font-size:13px;font-weight:600;color:${m.color}">${m.text}</div></div><button onclick="downloadBackup();document.getElementById('backup-banner').remove()" style="padding:6px 12px;background:${m.color};color:#fff;border:none;border-radius:var(--rpill);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap">${m.btn}</button><button onclick="document.getElementById('backup-banner').remove()" style="border:none;background:none;cursor:pointer;color:${m.color};font-size:20px;padding:4px;flex-shrink:0">×</button>`;
+  const notifBanner=document.getElementById('notif-banner');
+  notifBanner.parentNode.insertBefore(b,notifBanner.nextSibling);
+}
+
+// Schedule auto backup check daily at login
+function scheduleAutoBackupCheck(){
+  // Check on login
+  setTimeout(checkAutoBackup, 2000);
+  // Also schedule daily at 6PM
+  const now=new Date(),fire=new Date();
+  fire.setHours(18,0,0,0);
+  const ms=fire-now;
+  if(ms>0) setTimeout(checkAutoBackup, ms);
 }
 window.verifyRestorePin=function(){
   const pwd=document.getElementById('restore-pin-input').value.trim();
@@ -1221,6 +1345,7 @@ window.ownerLogin=function(){
   document.getElementById('owner-login').style.display='none';
   document.getElementById('owner-app').classList.add('show');
   try{localStorage.setItem('cvt_owner_session','1');}catch(e){}
+  setTimeout(()=>{updateBackupStatus();scheduleAutoBackupCheck();checkDailyEmailBackup();},500);
 }
 window.ownerLogout=function(){
   try{localStorage.removeItem('cvt_owner_session');}catch(e){}
@@ -1229,7 +1354,7 @@ window.ownerLogout=function(){
   document.getElementById('lpin').value='';
 }
 setTimeout(()=>{
-  try{if(localStorage.getItem('cvt_owner_session')==='1'){document.getElementById('owner-login').style.display='none';document.getElementById('owner-app').classList.add('show');}}catch(e){}
+  try{if(localStorage.getItem('cvt_owner_session')==='1'){document.getElementById('owner-login').style.display='none';document.getElementById('owner-app').classList.add('show');setTimeout(()=>{updateBackupStatus();scheduleAutoBackupCheck();checkDailyEmailBackup();},500);}}catch(e){}
 },100);
 
 // UTILS
