@@ -1267,9 +1267,9 @@ function showBackupBanner(type){
   const existing=document.getElementById('backup-banner');
   if(existing)return;
   const msgs={
-    urgent:{bg:'#FEE2E2',border:'#FCA5A5',color:'#991B1B',icon:'ti-alert-triangle',text:'Data backup cheyyaathathu! Backup cheyyuka — data loss avoid cheyyaan',btn:'Backup Now'},
-    weekly:{bg:'#FEF3C7',border:'#FDE68A',color:'#92400E',icon:'ti-calendar-event',text:'7 days aayi backup cheyyaathathu. Weekly backup important aanu!',btn:'Backup Now'},
-    reminder:{bg:'#EBF1FD',border:'#BDD0F9',color:'#1E40AF',icon:'ti-bell',text:'3 days aayi backup cheyyaathathu. Ippol backup cheyyuka.',btn:'Backup'}
+    urgent:{bg:'#FEE2E2',border:'#FCA5A5',color:'#991B1B',icon:'ti-alert-triangle',text:'No backup found! Please backup your data immediately to avoid data loss.',btn:'Backup Now'},
+    weekly:{bg:'#FEF3C7',border:'#FDE68A',color:'#92400E',icon:'ti-calendar-event',text:'7 days since last backup. Weekly backup is important — please backup now!',btn:'Backup Now'},
+    reminder:{bg:'#EBF1FD',border:'#BDD0F9',color:'#1E40AF',icon:'ti-bell',text:'3 days since last backup. We recommend backing up your data regularly.',btn:'Backup'}
   };
   const m=msgs[type]||msgs.reminder;
   const b=document.createElement('div');
