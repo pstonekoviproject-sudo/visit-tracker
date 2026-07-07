@@ -1,0 +1,24 @@
+{
+  "name": "P Stone Coimbatore",
+  "short_name": "P Stone",
+  "description": "Visit Tracker — P Stone Coimbatore",
+  "start_url": "/visit-tracker/visit_tracker_staff.html",
+  "display": "standalone",
+  "background_color": "#1C2B3A",
+  "theme_color": "#1C2B3A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
