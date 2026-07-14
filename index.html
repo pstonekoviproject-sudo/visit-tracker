@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1C2B3A">
+<title>Visit Tracker — Company Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:linear-gradient(160deg,#1C2B3A 0%,#2A3F54 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;-webkit-font-smoothing:antialiased}
+.logo{width:72px;height:72px;border-radius:20px;background:#E8A020;display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 24px rgba(232,160,32,.4)}
+.logo i{font-size:36px;color:#1C2B3A}
+.brand{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:6px}
+.sub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:36px;text-align:center}
+.card{background:rgba(255,255,255,.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:24px;width:100%;max-width:360px}
+.tabs{display:flex;gap:6px;margin-bottom:20px;background:rgba(255,255,255,.06);border-radius:12px;padding:4px}
+.tab{flex:1;padding:8px;font-size:13px;font-weight:600;border-radius:9px;border:none;background:none;color:rgba(255,255,255,.5);cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+.tab.on{background:#E8A020;color:#1C2B3A}
+.lbl{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:7px;letter-spacing:.4px;text-transform:uppercase}
+.inp{width:100%;font-size:14px;padding:12px 14px;border:1.5px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-family:'Inter',sans-serif;margin-bottom:14px;transition:border .2s}
+.inp:focus{outline:none;border-color:#E8A020}
+.inp::placeholder{color:rgba(255,255,255,.25)}
+.inp option{background:#2A3F54;color:#fff}
+.btn{width:100%;padding:14px;font-size:15px;font-weight:700;border-radius:12px;background:#E8A020;color:#1C2B3A;border:none;cursor:pointer;font-family:'Inter',sans-serif;transition:transform .1s,opacity .1s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.98);opacity:.9}
+.btn-sec{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);margin-top:8px}
+.err{display:none;background:rgba(217,64,64,.15);border:1px solid rgba(217,64,64,.3);color:#FF8080;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px;text-align:center}
+.hint{font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-top:14px;line-height:1.5}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.1)}
+.divider span{font-size:11px;color:rgba(255,255,255,.3)}
+.company-list{margin-top:16px}
+.company-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.06);border-radius:12px;margin-bottom:8px;cursor:pointer;border:1px solid rgba(255,255,255,.08);transition:all .2s}
+.company-item:hover{background:rgba(255,255,255,.1);border-color:rgba(232,160,32,.3)}
+.company-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0}
+.company-name{font-size:14px;font-weight:600;color:#fff}
+.company-code{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.loading{text-align:center;padding:2rem;color:rgba(255,255,255,.4)}
+.spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,.1);border-top-color:#E8A020;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:fadeIn .3s ease}
+</style>
+</head>
+<body>
+<div class="logo"><i class="ti ti-building-store"></i></div>
+<div class="brand">Visit Tracker</div>
+<div class="sub">Professional Sales Visit Management</div>
+
+<div class="card fade">
+  <div class="tabs">
+    <button class="tab on" onclick="showTab('login')">Login</button>
+    <button class="tab" onclick="showTab('register')">New Company</button>
+  </div>
+
+  <!-- LOGIN TAB -->
+  <div id="tab-login">
+    <div class="err" id="lerr"></div>
+    <label class="lbl">Company Code</label>
+    <input class="inp" id="lcode" type="text" placeholder="e.g. PSTONE" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')doLogin()">
+    <label class="lbl">Role</label>
+    <select class="inp" id="lrole">
+      <option value="owner">Owner</option>
+      <option value="staff">Staff / Marketing / Supervisor</option>
+    </select>
+    <button class="btn" onclick="doLogin()"><i class="ti ti-login" style="font-size:16px"></i> Enter Dashboard</button>
+    <div class="hint">Enter your company code to access the dashboard.<br>Contact your admin if you don't have one.</div>
+  </div>
+
+  <!-- REGISTER TAB -->
+  <div id="tab-register" style="display:none">
+    <div class="err" id="rerr"></div>
+    <label class="lbl">Company Name</label>
+    <input class="inp" id="rname" type="text" placeholder="e.g. P Stone Coimbatore">
+    <label class="lbl">Company Code (unique, no spaces)</label>
+    <input class="inp" id="rcode" type="text" placeholder="e.g. PSTONE" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
+    <label class="lbl">Owner Name</label>
+    <input class="inp" id="rowname" type="text" placeholder="Owner full name">
+    <label class="lbl">Firebase API Key</label>
+    <input class="inp" id="rapikey" type="text" placeholder="AIzaSy...">
+    <label class="lbl">Firebase Project ID</label>
+    <input class="inp" id="rprojectid" type="text" placeholder="my-project-id">
+    <label class="lbl">Firebase App ID</label>
+    <input class="inp" id="rappid" type="text" placeholder="1:123456:web:abc...">
+    <button class="btn" onclick="doRegister()"><i class="ti ti-plus" style="font-size:16px"></i> Register Company</button>
+    <div class="hint">Each company needs its own Firebase project.<br>Free Firebase account at firebase.google.com</div>
+  </div>
+</div>
+
+<script>
+// Companies stored in localStorage (in production use a central DB)
+const COMPANIES_KEY = 'vt_companies';
+
+function getCompanies(){
+  try{return JSON.parse(localStorage.getItem(COMPANIES_KEY)||'{}');}catch(e){return {};}
+}
+function saveCompanies(c){localStorage.setItem(COMPANIES_KEY,JSON.stringify(c));}
+
+// Pre-register P Stone
+function initPStone(){
+  const companies=getCompanies();
+  if(!companies['PSTONE']){
+    companies['PSTONE']={
+      name:'P Stone Coimbatore',
+      code:'PSTONE',
+      color:'#E8A020',
+      ownerName:'Owner',
+      firebase:{
+        apiKey:'AIzaSyCLPOfFe6mB8msn7GNnjC31EL6eFRyHKMs',
+        authDomain:'visit-tracker-a7d0a.firebaseapp.com',
+        projectId:'visit-tracker-a7d0a',
+        appId:'1:381386116373:web:97dbe24bd5cbbe3dd62d1c'
+      },
+      createdAt:new Date().toISOString()
+    };
+    saveCompanies(companies);
+  }
+}
+initPStone();
+
+function showTab(t){
+  document.getElementById('tab-login').style.display=t==='login'?'block':'none';
+  document.getElementById('tab-register').style.display=t==='register'?'block':'none';
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',(t==='login'&&i===0)||(t==='register'&&i===1)));
+}
+
+function doLogin(){
+  const code=document.getElementById('lcode').value.trim().toUpperCase();
+  const role=document.getElementById('lrole').value;
+  const err=document.getElementById('lerr');
+  if(!code){err.textContent='Please enter your company code!';err.style.display='block';return;}
+  const companies=getCompanies();
+  const company=companies[code];
+  if(!company){err.textContent='Company code "'+code+'" not found. Please check and try again.';err.style.display='block';return;}
+  err.style.display='none';
+  // Store selected company in sessionStorage
+  sessionStorage.setItem('vt_company',JSON.stringify(company));
+  // Redirect to appropriate app
+  if(role==='owner'){
+    window.location.href='owner.html?company='+code;
+  } else {
+    window.location.href='staff.html?company='+code;
+  }
+}
+
+function doRegister(){
+  const name=document.getElementById('rname').value.trim();
+  const code=document.getElementById('rcode').value.trim().toUpperCase();
+  const ownerName=document.getElementById('rowname').value.trim();
+  const apiKey=document.getElementById('rapikey').value.trim();
+  const projectId=document.getElementById('rprojectid').value.trim();
+  const appId=document.getElementById('rappid').value.trim();
+  const err=document.getElementById('rerr');
+  if(!name||!code||!ownerName||!apiKey||!projectId||!appId){
+    err.textContent='All fields are required!';err.style.display='block';return;
+  }
+  if(code.length<3||code.length>10){
+    err.textContent='Company code must be 3-10 characters!';err.style.display='block';return;
+  }
+  const companies=getCompanies();
+  if(companies[code]){
+    err.textContent='Company code "'+code+'" already exists. Please choose a different code.';err.style.display='block';return;
+  }
+  const colors=['#E8A020','#0D9E6E','#2E6BE6','#D94040','#8B5CF6','#E8650A'];
+  const color=colors[Object.keys(companies).length%colors.length];
+  companies[code]={
+    name,code,color,ownerName,
+    firebase:{
+      apiKey,
+      authDomain:projectId+'.firebaseapp.com',
+      projectId,
+      storageBucket:projectId+'.firebasestorage.app',
+      appId
+    },
+    createdAt:new Date().toISOString()
+  };
+  saveCompanies(companies);
+  err.style.display='none';
+  alert('✅ Company "'+name+'" registered successfully!\n\nYour company code: '+code+'\n\nShare this code with your staff.');
+  document.getElementById('lcode').value=code;
+  showTab('login');
+}
+</script>
+</body>
+</html>
