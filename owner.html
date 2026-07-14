@@ -1132,70 +1132,161 @@ function populateRouteStaff(){
   sel.innerHTML='<option value="">— Select Staff —</option>'+mktStaff.map(s=>`<option value="${s.name}"${s.name===cur?' selected':''}>${s.name}</option>`).join('');
 }
 
-window.renderRoute=function(){
+window.renderRoute=async function(){
   const staffName=document.getElementById('route-staff')?.value;
   const date=document.getElementById('route-date')?.value;
   const rc=document.getElementById('route-content');
   if(!staffName||!date){rc.innerHTML=`<div class="empty"><i class="ti ti-route"></i><p>Select staff and date</p></div>`;return;}
+
   const dayVisits=visits.filter(v=>v.assisted===staffName&&(v.visitType==='field-visit'||v.visitType==='influencer-visit')&&v.date===date).sort((a,b)=>(a.id).localeCompare(b.id));
-  if(!dayVisits.length){rc.innerHTML=`<div class="empty"><i class="ti ti-calendar-x"></i><p>${staffName} — No visits on ${date}</p></div>`;return;}
+  const dayLog=daylogs.find(l=>l.staff===staffName&&l.date===date);
 
+  if(!dayVisits.length&&!dayLog){rc.innerHTML=`<div class="empty"><i class="ti ti-calendar-x"></i><p>${staffName} — No data on ${date}</p></div>`;return;}
+
+  rc.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--tx2);font-size:13px;font-weight:500"><div style="width:24px;height:24px;border:3px solid var(--bdr2);border-top-color:var(--amber);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 10px"></div>Loading route...</div>`;
+
+  // Build waypoints: start → visits → end
+  const gpsVisits=dayVisits.filter(v=>v.gpsLat&&v.gpsLng);
+  const photosTotal=dayVisits.reduce((s,v)=>s+(v.photos?.length||0),0);
+
+  // OSRM road distance
   let totalKm=0;
-  const withDist=[];
-  const useRoadDistance=false;
+  const withDist=new Array(dayVisits.length).fill(null).map((_,i)=>({...dayVisits[i],dist:null}));
+  let useRoadDistance=false;
 
-  function haversine(p,c){
-    const R=6371,dLat=(parseFloat(c.gpsLat)-parseFloat(p.gpsLat))*Math.PI/180,dLng=(parseFloat(c.gpsLng)-parseFloat(p.gpsLng))*Math.PI/180;
-    const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(parseFloat(p.gpsLat)*Math.PI/180)*Math.cos(parseFloat(c.gpsLat)*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+  function haversine(lat1,lng1,lat2,lng2){
+    const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+    const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
     return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
   }
 
-  dayVisits.forEach((v,i)=>{
-    let dist=null;
-    if(i>0){
-      const p=dayVisits[i-1];
-      if(p.gpsLat&&p.gpsLng&&v.gpsLat&&v.gpsLng){
-        dist=haversine(p,v);
-        totalKm+=dist;
-      }
-    }
-    withDist.push({...v,dist});
-  });
+  // Build all GPS points: start + visits + end
+  const allPoints=[];
+  if(dayLog?.startLat&&dayLog?.startLng) allPoints.push({lat:parseFloat(dayLog.startLat),lng:parseFloat(dayLog.startLng),type:'start'});
+  gpsVisits.forEach(v=>allPoints.push({lat:parseFloat(v.gpsLat),lng:parseFloat(v.gpsLng),type:'visit',id:v.id}));
+  if(dayLog?.endLat&&dayLog?.endLng) allPoints.push({lat:parseFloat(dayLog.endLat),lng:parseFloat(dayLog.endLng),type:'end'});
 
-  const gpsVisits=dayVisits.filter(v=>v.gpsLat&&v.gpsLng);
-  const mapsLink=gpsVisits.length>=2?'https://www.google.com/maps/dir/'+gpsVisits.map(v=>v.gpsLat+','+v.gpsLng).join('/'):null;
-  const photosTotal=dayVisits.reduce((s,v)=>s+(v.photos?.length||0),0);
+  if(allPoints.length>=2){
+    try{
+      const coords=allPoints.map(p=>`${p.lng},${p.lat}`).join(';');
+      const controller=new AbortController();
+      setTimeout(()=>controller.abort(),6000);
+      const res=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=false&steps=false`,{signal:controller.signal});
+      const data=await res.json();
+      if(data.code==='Ok'&&data.routes?.[0]){
+        totalKm=data.routes[0].distance/1000;
+        const legs=data.routes[0].legs||[];
+        let li=0;
+        dayVisits.forEach((v,i)=>{
+          if(i>0&&v.gpsLat&&v.gpsLng&&dayVisits[i-1].gpsLat&&dayVisits[i-1].gpsLng){
+            if(legs[li]){withDist[i].dist=legs[li].distance/1000;li++;}
+          }
+        });
+        useRoadDistance=true;
+      }
+    }catch(e){}
+  }
+
+  if(!useRoadDistance){
+    totalKm=0;
+    for(let i=1;i<allPoints.length;i++){
+      totalKm+=haversine(allPoints[i-1].lat,allPoints[i-1].lng,allPoints[i].lat,allPoints[i].lng);
+    }
+    dayVisits.forEach((v,i)=>{
+      if(i>0){
+        const p=dayVisits[i-1];
+        if(p.gpsLat&&p.gpsLng&&v.gpsLat&&v.gpsLng){
+          withDist[i].dist=haversine(parseFloat(p.gpsLat),parseFloat(p.gpsLng),parseFloat(v.gpsLat),parseFloat(v.gpsLng));
+        }
+      }
+    });
+  }
+
+  // Google Maps full route link
+  const mapsPoints=[
+    ...(dayLog?.startLat?[`${dayLog.startLat},${dayLog.startLng}`]:[]),
+    ...gpsVisits.map(v=>`${v.gpsLat},${v.gpsLng}`),
+    ...(dayLog?.endLat?[`${dayLog.endLat},${dayLog.endLng}`]:[])
+  ];
+  const mapsLink=mapsPoints.length>=2?'https://www.google.com/maps/dir/'+mapsPoints.join('/'):null;
+
+  // Day timing
+  const startT=dayLog?.startTime?new Date(dayLog.startTime).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'—';
+  const endT=dayLog?.endTime?new Date(dayLog.endTime).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):null;
 
   rc.innerHTML=`
     <div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,var(--amber-lt) 0%,#fff 100%);border-color:var(--amber)">
       <div style="font-size:15px;font-weight:800;color:#92400E;margin-bottom:12px"><i class="ti ti-route" style="font-size:16px;vertical-align:-2px;margin-right:6px"></i>${staffName} — ${date}</div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">
         <div style="background:rgba(255,255,255,.7);border-radius:12px;padding:11px;text-align:center"><div style="font-size:22px;font-weight:800;color:#92400E">${dayVisits.length}</div><div style="font-size:11px;color:#92400E;margin-top:1px;font-weight:500">Total Visits</div></div>
-        <div style="background:rgba(255,255,255,.7);border-radius:12px;padding:11px;text-align:center"><div style="font-size:22px;font-weight:800;color:#92400E">${totalKm>0?totalKm.toFixed(1)+' km':'N/A'}</div><div style="font-size:11px;color:#92400E;margin-top:1px;font-weight:500">Distance</div></div>
+        <div style="background:rgba(255,255,255,.7);border-radius:12px;padding:11px;text-align:center"><div style="font-size:22px;font-weight:800;color:#92400E">${totalKm>0?totalKm.toFixed(1)+' km':'—'}</div><div style="font-size:11px;color:#92400E;margin-top:1px;font-weight:500">Total Distance</div></div>
         <div style="background:rgba(255,255,255,.7);border-radius:12px;padding:11px;text-align:center"><div style="font-size:22px;font-weight:800;color:#92400E">${gpsVisits.length}</div><div style="font-size:11px;color:#92400E;margin-top:1px;font-weight:500">GPS Tagged</div></div>
         <div style="background:rgba(255,255,255,.7);border-radius:12px;padding:11px;text-align:center"><div style="font-size:22px;font-weight:800;color:#92400E">${photosTotal}</div><div style="font-size:11px;color:#92400E;margin-top:1px;font-weight:500">Photos</div></div>
       </div>
-      <div style="margin-top:10px;font-size:11px;color:#B45309"><i class="ti ti-${useRoadDistance?'road':'info-circle'}" style="font-size:11px;vertical-align:-1px"></i> ${useRoadDistance?'Road distance via OpenRouteService':'Approximate straight-line distance (road distance unavailable)'}</div>
-    </div>
-    ${mapsLink?`<a href="${mapsLink}" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:14px;text-decoration:none;display:flex"><i class="ti ti-map-2"></i> View Full Route on Google Maps</a>`:''}
-    <div style="font-size:12px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Visit-by-Visit Route</div>
-    ${withDist.map((v,i)=>`
-      <div class="route-stop">
-        <div class="route-line">
-          <div class="route-dot" style="background:${v.visitType==='influencer-visit'?'var(--green)':'var(--amber)'}">${i+1}</div>
-          ${i<withDist.length-1?`<div class="route-connector"></div>`:''}
+      ${dayLog?`<div style="background:rgba(255,255,255,.7);border-radius:12px;padding:11px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:var(--green)"></div><div style="font-size:12px;font-weight:700;color:#065F46">Day Start</div></div>
+          <div style="font-size:13px;font-weight:800;color:var(--green)">${startT}</div>
         </div>
-        <div style="flex:1;padding-bottom:${i<withDist.length-1?'0':'0'}">
-          <div class="vcard" style="border-left:3px solid ${v.visitType==='influencer-visit'?'var(--green)':'var(--amber)'};border-radius:0 var(--r) var(--r) 0;margin-bottom:${i<withDist.length-1?'0':'8px'}">
+        ${dayLog.startPlace?`<div style="font-size:11px;color:var(--tx2);margin-bottom:8px"><i class="ti ti-map-pin" style="font-size:11px;vertical-align:-1px;color:var(--amber)"></i> ${dayLog.startPlace}</div>`:''}
+        ${endT?`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:var(--red)"></div><div style="font-size:12px;font-weight:700;color:#B91C1C">Day End</div></div>
+          <div style="font-size:13px;font-weight:800;color:var(--red)">${endT}</div>
+        </div>${dayLog.endPlace?`<div style="font-size:11px;color:var(--tx2)"><i class="ti ti-map-pin" style="font-size:11px;vertical-align:-1px;color:var(--amber)"></i> ${dayLog.endPlace}</div>`:''}`:`<div style="font-size:11px;color:var(--green);font-weight:600">🟢 Currently in field</div>`}
+        ${dayLog.totalHoursStr?`<div style="font-size:12px;color:var(--tx2);margin-top:6px;font-weight:600">⏱ Total field time: ${dayLog.totalHoursStr}</div>`:''}
+      </div>`:''}
+      <div style="font-size:11px;color:#B45309"><i class="ti ti-${useRoadDistance?'road':'info-circle'}" style="font-size:11px;vertical-align:-1px"></i> ${useRoadDistance?'Road distance via OSRM':'Approximate straight-line distance'}</div>
+    </div>
+    ${mapsLink?`<a href="${mapsLink}" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:14px;text-decoration:none;display:flex"><i class="ti ti-map-2"></i> View Full Day Route on Google Maps</a>`:''}
+    <div style="font-size:12px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Visit-by-Visit Timeline</div>
+
+    ${dayLog?.startPlace||dayLog?.startTime?`<div style="display:flex;gap:12px;margin-bottom:0">
+      <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0"><i class="ti ti-player-play" style="font-size:14px"></i></div>
+        <div style="width:2px;flex:1;background:var(--green-lt);min-height:16px;margin:4px 0"></div>
+      </div>
+      <div style="flex:1;padding-bottom:0">
+        <div class="vcard" style="border-left:3px solid var(--green);border-radius:0 var(--r) var(--r) 0;margin-bottom:0">
+          <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:3px">🟢 Day Start — ${startT}</div>
+          ${dayLog.startPlace?`<div style="font-size:12px;color:var(--tx2)"><i class="ti ti-map-pin" style="font-size:12px;vertical-align:-1px;color:var(--amber)"></i> ${dayLog.startPlace}</div>`:''}
+        </div>
+      </div>
+    </div>`:''}
+
+    ${withDist.map((v,i)=>{
+      const isInf=v.visitType==='influencer-visit';
+      const photosHtml=v.photos&&v.photos.length?'<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+v.photos.map(p=>'<img src="'+p+'" onclick="viewPhoto(this.src)" style="width:60px;height:60px;object-fit:cover;border-radius:9px;border:1px solid var(--bdr);cursor:pointer">').join('')+'</div>':'';
+      const isLast=i===withDist.length-1;
+      return `<div style="display:flex;gap:12px;margin-bottom:0">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:32px;height:32px;border-radius:50%;background:${isInf?'var(--green)':'var(--amber)'};color:${isInf?'#fff':'var(--slate)'};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">${i+1}</div>
+          ${!isLast||dayLog?.endPlace?`<div style="width:2px;flex:1;background:var(--amber-lt);min-height:16px;margin:4px 0"></div>`:''}
+        </div>
+        <div style="flex:1;padding-bottom:0">
+          <div class="vcard" style="border-left:3px solid ${isInf?'var(--green)':'var(--amber)'};border-radius:0 var(--r) var(--r) 0;margin-bottom:0">
             <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:14px;font-weight:700">${v.name}</span><span style="font-size:11px;color:var(--tx3)">${v.contact||''}</span></div>
             ${v.company?`<div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:3px">🏢 ${v.company}</div>`:''}
             <div style="font-size:12px;color:var(--tx2);margin-bottom:6px"><i class="ti ti-map-pin" style="font-size:12px;vertical-align:-1px;color:var(--amber)"></i> ${v.place||'No location'}${v.gpsLat?` <a href="https://maps.google.com/?q=${v.gpsLat},${v.gpsLng}" target="_blank" style="color:var(--blue);font-size:11px;margin-left:4px">📍 Map</a>`:''}</div>
             ${v.remarks?`<div style="font-size:12px;color:var(--tx3);font-style:italic;margin-bottom:6px">"${v.remarks}"</div>`:''}
-            ${(v.photos&&v.photos.length)?'<div style="display:flex;gap:6px;margin-bottom:6px">'+v.photos.map(function(p){return '<img src="'+p+'" onclick="viewPhoto(this.src)" style="width:56px;height:56px;object-fit:cover;border-radius:9px;border:1px solid var(--bdr);cursor:pointer">';}).join('')+'</div>':''}
-            ${v.dist!=null?`<div style="font-size:11px;color:#B45309;font-weight:600"><i class="ti ti-arrow-up-right" style="font-size:11px;vertical-align:-1px"></i> ${v.dist.toFixed(1)} km from previous stop</div>`:''}
+            ${photosHtml}
+            ${v.dist!=null?`<div style="font-size:11px;color:#B45309;font-weight:600;margin-top:6px"><i class="ti ti-arrow-up-right" style="font-size:11px;vertical-align:-1px"></i> ${v.dist.toFixed(2)} km from previous</div>`:''}
           </div>
         </div>
-      </div>`).join('')}
+      </div>`;
+    }).join('')}
+
+    ${dayLog?.endPlace&&endT?`<div style="display:flex;gap:12px">
+      <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0"><i class="ti ti-player-stop" style="font-size:14px"></i></div>
+      </div>
+      <div style="flex:1">
+        <div class="vcard" style="border-left:3px solid var(--red);border-radius:0 var(--r) var(--r) 0">
+          <div style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:3px">🔴 Day End — ${endT}</div>
+          ${dayLog.endPlace?`<div style="font-size:12px;color:var(--tx2)"><i class="ti ti-map-pin" style="font-size:12px;vertical-align:-1px;color:var(--amber)"></i> ${dayLog.endPlace}</div>`:''}
+          ${dayLog.totalHoursStr?`<div style="font-size:12px;color:var(--tx2);margin-top:4px;font-weight:600">⏱ Field time: ${dayLog.totalHoursStr}</div>`:''}
+        </div>
+      </div>
+    </div>`:''}
   `;
 }
 

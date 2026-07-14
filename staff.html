@@ -937,9 +937,9 @@ window.dayStart=async function(){
     try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${window._lastGPS.lat}&lon=${window._lastGPS.lng}&format=json`,{headers:{'Accept-Language':'en'}});const d=await r.json();const a=d.address||{};place=[a.suburb||a.village||a.town,a.city||a.county].filter(Boolean).join(', ');}catch(e){}
   }
   window._dayStartTime=now;
-  const data={startTime:now.toISOString(),startPlace:place,endTime:null};
+  const data={startTime:now.toISOString(),startPlace:place,startLat:window._lastGPS?.lat||'',startLng:window._lastGPS?.lng||'',endTime:null};
   try{localStorage.setItem('cvt_day_'+me+'_'+today,JSON.stringify(data));}catch(e){}
-  try{await setDoc(doc(db,'daylog',me+'_'+today),{staff:me,date:today,startTime:now.toISOString(),startPlace:place,endTime:null,endPlace:''});}catch(e){}
+  try{await setDoc(doc(db,'daylog',me+'_'+today),{staff:me,date:today,startTime:now.toISOString(),startPlace:place,startLat:window._lastGPS?.lat||'',startLng:window._lastGPS?.lng||'',endTime:null,endPlace:''});}catch(e){}
   document.getElementById('day-not-started').style.display='none';
   document.getElementById('day-started').style.display='block';
   document.getElementById('day-start-info').textContent='Started: '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+(place?' · '+place:'');
@@ -986,7 +986,7 @@ window.dayEnd=async function(){
   const h=Math.floor(diff/3600),m=Math.floor((diff%3600)/60);
   const tv=myV().filter(v=>v.date===today);
   try{const saved=JSON.parse(localStorage.getItem('cvt_day_'+me+'_'+today)||'{}');saved.endTime=now.toISOString();saved.endPlace=endPlace;localStorage.setItem('cvt_day_'+me+'_'+today,JSON.stringify(saved));}catch(e){}
-  try{const saved=JSON.parse(localStorage.getItem('cvt_day_'+me+'_'+today)||'{}');await setDoc(doc(db,'daylog',me+'_'+today),{staff:me,date:today,startTime:saved.startTime,startPlace:saved.startPlace||'',endTime:now.toISOString(),endPlace,totalVisits:tv.length,totalHours:h+(m/60),totalHoursStr:h+'h '+m+'m'});}catch(e){}
+  try{const saved=JSON.parse(localStorage.getItem('cvt_day_'+me+'_'+today)||'{}');await setDoc(doc(db,'daylog',me+'_'+today),{staff:me,date:today,startTime:saved.startTime,startPlace:saved.startPlace||'',startLat:saved.startLat||'',startLng:saved.startLng||'',endTime:now.toISOString(),endPlace,endLat:window._lastGPS?.lat||'',endLng:window._lastGPS?.lng||'',totalVisits:tv.length,totalHours:h+(m/60),totalHoursStr:h+'h '+m+'m'});}catch(e){}
   clearInterval(window._dayTimerInterval);
   alert(`✅ Field Day Summary\n\n⏰ Total time: ${h}h ${m}m\n📍 Visits: ${tv.length}\n🕐 End time: ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}${endPlace?' · '+endPlace:''}\n\nGreat work! 👍`);
   document.getElementById('day-started').style.display='none';
