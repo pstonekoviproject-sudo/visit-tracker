@@ -459,25 +459,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-hei
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
 import { getFirestore, collection, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
+// Company configs — hardcoded, no localStorage needed
+const COMPANY_CONFIGS={
+  'PSTONE':{name:'P Stone Coimbatore',firebase:{apiKey:'AIzaSyCLPOfFe6mB8msn7GNnjC31EL6eFRyHKMs',authDomain:'visit-tracker-a7d0a.firebaseapp.com',projectId:'visit-tracker-a7d0a',storageBucket:'visit-tracker-a7d0a.firebasestorage.app',messagingSenderId:'381386116373',appId:'1:381386116373:web:97dbe24bd5cbbe3dd62d1c'}},
+  'PATHIYARA':{name:'Pathiyara Buildware',firebase:{apiKey:'AIzaSyC-5DfASXLAdCnqrdy-idV7gRG3vuABwSA',authDomain:'showroom-visit.firebaseapp.com',projectId:'showroom-visit',storageBucket:'showroom-visit.firebasestorage.app',messagingSenderId:'930914164191',appId:'1:930914164191:web:4c83ffe888ae8374d5386a'}}
+};
+
 const FC=(()=>{
   try{
-    const stored=sessionStorage.getItem('vt_company');
-    if(stored){
-      const c=JSON.parse(stored);
-      if(c.name){document.title=c.name+' — Staff';}
-      if(c.firebase)return c.firebase;
-    }
-    const code=new URLSearchParams(window.location.search).get('company');
-    if(code){
-      const companies=JSON.parse(localStorage.getItem('vt_companies')||'{}');
-      if(companies[code]){
-        const c=companies[code];
-        document.title=c.name+' — Staff';
-        if(c.firebase)return c.firebase;
-      }
-    }
+    const code=new URLSearchParams(window.location.search).get('company')||'PSTONE';
+    const company=COMPANY_CONFIGS[code]||COMPANY_CONFIGS['PSTONE'];
+    document.title=company.name+' — Staff';
+    return company.firebase;
   }catch(e){}
-  return{apiKey:"AIzaSyCLPOfFe6mB8msn7GNnjC31EL6eFRyHKMs",authDomain:"visit-tracker-a7d0a.firebaseapp.com",projectId:"visit-tracker-a7d0a",storageBucket:"visit-tracker-a7d0a.firebasestorage.app",messagingSenderId:"381386116373",appId:"1:381386116373:web:97dbe24bd5cbbe3dd62d1c"};
+  return COMPANY_CONFIGS['PSTONE'].firebase;
 })();
 const db=getFirestore(initializeApp(FC));
 
