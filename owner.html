@@ -294,9 +294,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-hei
 <div id="owner-login">
   <div class="login-logo"><i class="ti ti-building-store"></i></div>
   <div class="login-brand">P Stone Coimbatore</div>
-  <div class="login-sub">Owner Dashboard</div>
+  <div class="login-sub" id="login-sub">Owner Dashboard</div>
   <div class="login-card">
     <div class="login-err" id="lerr"></div>
+    <label class="login-label">Select Company</label>
+    <select id="company-sel" style="width:100%;font-size:15px;padding:13px 14px;border:1.5px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-family:'Inter',sans-serif;margin-bottom:16px;-webkit-appearance:none;transition:border .2s" onchange="switchCompany(this.value)">
+      <option value="PSTONE" style="background:#2A3F54">P Stone Coimbatore</option>
+      <option value="PATHIYARA" style="background:#2A3F54">Pathiyara Buildware</option>
+    </select>
     <label class="login-label">Access PIN</label>
     <input class="login-pin" type="password" id="lpin" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="• • • •" onkeydown="if(event.key==='Enter')ownerLogin()">
     <button class="login-btn" onclick="ownerLogin()"><i class="ti ti-lock-open" style="font-size:16px;vertical-align:-2px;margin-right:6px"></i>Enter Dashboard</button>
@@ -431,7 +436,51 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-hei
 
       <!-- Admin section -->
       <div id="admin-section" style="display:none">
-        <div class="card" style="margin-bottom:10px;border-color:#A7F3D0">
+        <!-- ADD NEW COMPANY - SUPER ADMIN ONLY -->
+        <div class="card" style="margin-bottom:10px;border-color:#C4B5FD">
+          <div class="card-title" style="color:#5B21B6"><i class="ti ti-building-plus"></i> Add New Company</div>
+          <div style="font-size:12px;color:var(--tx2);margin-bottom:12px">Super Admin access required to add companies.</div>
+
+          <!-- Super Admin Lock -->
+          <div id="sa-locked">
+            <div class="fgrp" style="margin-bottom:10px">
+              <label>Super Admin Password</label>
+              <input type="password" id="sa-pwd" placeholder="Enter super admin password..." onkeydown="if(event.key==='Enter')unlockSuperAdmin()">
+            </div>
+            <div id="sa-err" style="display:none;color:var(--red);font-size:12px;margin-bottom:8px"></div>
+            <button class="btn" style="width:100%;justify-content:center;background:#EDE9FE;color:#5B21B6;border-color:#C4B5FD" onclick="unlockSuperAdmin()"><i class="ti ti-lock-open"></i> Unlock</button>
+          </div>
+
+          <!-- Super Admin Unlocked -->
+          <div id="sa-unlocked" style="display:none">
+            <div style="background:var(--green-lt);border-radius:10px;padding:8px 12px;font-size:12px;color:#065F46;margin-bottom:12px;font-weight:600;display:flex;justify-content:space-between;align-items:center">
+              <span>✅ Super Admin unlocked</span>
+              <button onclick="lockSuperAdmin()" style="border:none;background:none;color:#065F46;cursor:pointer;font-size:12px;font-weight:600">Lock</button>
+            </div>
+            <div class="fgrp"><label>Company Name</label><input type="text" id="nc-name" placeholder="e.g. ABC Tiles, Coimbatore"></div>
+            <div class="fgrp"><label>Company Code (unique, no spaces)</label><input type="text" id="nc-code" placeholder="e.g. ABCTILES" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"></div>
+            <div class="fgrp"><label>Firebase API Key</label><input type="text" id="nc-apikey" placeholder="AIzaSy..."></div>
+            <div class="fgrp"><label>Firebase Project ID</label><input type="text" id="nc-projectid" placeholder="my-project-id"></div>
+            <div class="fgrp"><label>Firebase App ID</label><input type="text" id="nc-appid" placeholder="1:123456:web:abc..."></div>
+            <div class="fgrp"><label>Messaging Sender ID</label><input type="text" id="nc-senderid" placeholder="123456789"></div>
+            <button class="btn" style="width:100%;justify-content:center;background:#EDE9FE;color:#5B21B6;border-color:#C4B5FD" onclick="addNewCompany()"><i class="ti ti-plus"></i> Add Company</button>
+            <div id="nc-result" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;font-size:13px;font-weight:600"></div>
+
+            <!-- Change Super Admin Password -->
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bdr)">
+              <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px">Change Super Admin Password</div>
+              <div class="fgrp"><label>New Password (min 6 chars)</label><input type="password" id="sa-new-pwd" placeholder="New password..."></div>
+              <div class="fgrp" style="margin-bottom:10px"><label>Confirm</label><input type="password" id="sa-confirm-pwd" placeholder="Confirm password..."></div>
+              <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="changeSuperAdminPwd()"><i class="ti ti-check"></i> Save Password</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- REGISTERED COMPANIES -->
+        <div class="card" style="margin-bottom:10px">
+          <div class="card-title"><i class="ti ti-buildings"></i> Registered Companies</div>
+          <div id="company-list"></div>
+        </div>
           <div class="card-title" style="color:var(--green)"><i class="ti ti-download"></i> Backup Data</div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <div style="font-size:13px;color:var(--tx2)">Last backup:</div>
@@ -600,16 +649,12 @@ const COMPANY_CONFIGS={
   'PATHIYARA':{name:'Pathiyara Buildware',firebase:{apiKey:'AIzaSyC-5DfASXLAdCnqrdy-idV7gRG3vuABwSA',authDomain:'showroom-visit.firebaseapp.com',projectId:'showroom-visit',storageBucket:'showroom-visit.firebasestorage.app',messagingSenderId:'930914164191',appId:'1:930914164191:web:4c83ffe888ae8374d5386a'}}
 };
 
-const FC=(()=>{
-  try{
-    const code=new URLSearchParams(window.location.search).get('company')||'PSTONE';
-    const company=COMPANY_CONFIGS[code]||COMPANY_CONFIGS['PSTONE'];
-    document.title=company.name+' — Owner';
-    setTimeout(()=>{const ht=document.getElementById('header-title');if(ht)ht.textContent=company.name;},100);
-    return company.firebase;
-  }catch(e){}
-  return COMPANY_CONFIGS['PSTONE'].firebase;
-})();
+// Get company from URL or default
+const _urlCode=new URLSearchParams(window.location.search).get('company')||'PSTONE';
+let _activeCompany=COMPANY_CONFIGS[_urlCode]||COMPANY_CONFIGS['PSTONE'];
+let _activeCode=COMPANY_CONFIGS[_urlCode]?_urlCode:'PSTONE';
+
+const FC=_activeCompany.firebase;
 const db=getFirestore(initializeApp(FC));
 
 let visits=[],staff=[],cmts={},daylogs=[],curPage='home',vf='',curFStaff='ALL',editingSupId=null,_pinAction=null,_detailData=[];
@@ -1278,7 +1323,116 @@ window.renderRoute=async function(){
   `;
 }
 
-// BACKUP & RESTORE
+// ---- SUPER ADMIN ----
+const SA_DEFAULT='SuperAdmin@2026';
+function getSAPwd(){return localStorage.getItem('vt_super_admin_pwd')||SA_DEFAULT;}
+
+window.unlockSuperAdmin=function(){
+  const pwd=document.getElementById('sa-pwd').value;
+  const err=document.getElementById('sa-err');
+  if(pwd!==getSAPwd()){
+    err.textContent='Incorrect Super Admin password!';err.style.display='block';
+    document.getElementById('sa-pwd').value='';return;
+  }
+  err.style.display='none';
+  document.getElementById('sa-locked').style.display='none';
+  document.getElementById('sa-unlocked').style.display='block';
+}
+
+window.lockSuperAdmin=function(){
+  document.getElementById('sa-unlocked').style.display='none';
+  document.getElementById('sa-locked').style.display='block';
+  document.getElementById('sa-pwd').value='';
+}
+
+window.changeSuperAdminPwd=function(){
+  const nw=document.getElementById('sa-new-pwd').value.trim();
+  const conf=document.getElementById('sa-confirm-pwd').value.trim();
+  if(nw.length<6){toast('Minimum 6 characters!');return;}
+  if(nw!==conf){toast('Passwords do not match!');return;}
+  localStorage.setItem('vt_super_admin_pwd',nw);
+  document.getElementById('sa-new-pwd').value='';
+  document.getElementById('sa-confirm-pwd').value='';
+  toast('Super Admin password changed ✓');
+}
+
+// ---- COMPANY MANAGEMENT ----
+// All companies stored in localStorage for cross-session persistence
+function getAllCompanies(){
+  const base={
+    'PSTONE':{name:'P Stone Coimbatore',code:'PSTONE',firebase:{apiKey:'AIzaSyCLPOfFe6mB8msn7GNnjC31EL6eFRyHKMs',authDomain:'visit-tracker-a7d0a.firebaseapp.com',projectId:'visit-tracker-a7d0a',storageBucket:'visit-tracker-a7d0a.firebasestorage.app',messagingSenderId:'381386116373',appId:'1:381386116373:web:97dbe24bd5cbbe3dd62d1c'}},
+    'PATHIYARA':{name:'Pathiyara Buildware',code:'PATHIYARA',firebase:{apiKey:'AIzaSyC-5DfASXLAdCnqrdy-idV7gRG3vuABwSA',authDomain:'showroom-visit.firebaseapp.com',projectId:'showroom-visit',storageBucket:'showroom-visit.firebasestorage.app',messagingSenderId:'930914164191',appId:'1:930914164191:web:4c83ffe888ae8374d5386a'}}
+  };
+  try{
+    const extra=JSON.parse(localStorage.getItem('vt_extra_companies')||'{}');
+    return{...base,...extra};
+  }catch(e){return base;}
+}
+
+window.addNewCompany=function(){
+  const name=document.getElementById('nc-name').value.trim();
+  const code=document.getElementById('nc-code').value.trim().toUpperCase();
+  const apiKey=document.getElementById('nc-apikey').value.trim();
+  const projectId=document.getElementById('nc-projectid').value.trim();
+  const appId=document.getElementById('nc-appid').value.trim();
+  const senderId=document.getElementById('nc-senderid').value.trim();
+  const res=document.getElementById('nc-result');
+
+  if(!name||!code||!apiKey||!projectId||!appId){
+    res.style.background='var(--red-lt)';res.style.color='var(--red)';
+    res.textContent='All fields required!';res.style.display='block';return;
+  }
+  if(code.length<3){res.style.background='var(--red-lt)';res.style.color='var(--red)';res.textContent='Code min 3 characters!';res.style.display='block';return;}
+
+  const all=getAllCompanies();
+  if(all[code]){res.style.background='var(--red-lt)';res.style.color='var(--red)';res.textContent='Code "'+code+'" already exists!';res.style.display='block';return;}
+
+  const newCompany={name,code,firebase:{apiKey,authDomain:projectId+'.firebaseapp.com',projectId,storageBucket:projectId+'.firebasestorage.app',messagingSenderId:senderId,appId}};
+  try{
+    const extra=JSON.parse(localStorage.getItem('vt_extra_companies')||'{}');
+    extra[code]=newCompany;
+    localStorage.setItem('vt_extra_companies',JSON.stringify(extra));
+  }catch(e){}
+
+  res.style.background='var(--green-lt)';res.style.color='#065F46';
+  res.textContent='✅ "'+name+'" added! Code: '+code;res.style.display='block';
+  // Clear form
+  ['nc-name','nc-code','nc-apikey','nc-projectid','nc-appid','nc-senderid'].forEach(id=>document.getElementById(id).value='');
+  // Update dropdown and list
+  updateCompanyDropdown();renderCompanyList();
+  toast(name+' added ✓');
+}
+
+function updateCompanyDropdown(){
+  const all=getAllCompanies();
+  const sel=document.getElementById('company-sel');
+  if(!sel)return;
+  sel.innerHTML=Object.values(all).map(c=>`<option value="${c.code}" style="background:#2A3F54">${c.name}</option>`).join('');
+  sel.value=_activeCode;
+}
+
+function renderCompanyList(){
+  const all=getAllCompanies();
+  const el=document.getElementById('company-list');
+  if(!el)return;
+  el.innerHTML=Object.values(all).map(c=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bdr)">
+      <div>
+        <div style="font-size:13px;font-weight:700">${c.name} ${c.code===_activeCode?'<span class="badge b-fully" style="font-size:10px">Current</span>':''}</div>
+        <div style="font-size:11px;color:var(--tx2);margin-top:2px">Code: <strong>${c.code}</strong> · ${c.firebase.projectId}</div>
+      </div>
+      <button onclick="window.open('owner.html?company=${c.code}','_blank')" class="btn btn-xs" style="white-space:nowrap"><i class="ti ti-external-link" style="font-size:11px"></i> Open</button>
+    </div>`).join('');
+}
+
+// Init company list when admin tab opens
+const _origSwitchRepTab=window.switchRepTab;
+window.switchRepTab=function(tab){
+  _origSwitchRepTab(tab);
+  if(tab==='admin'){updateCompanyDropdown();renderCompanyList();}
+}
+
+// ---- BACKUP & RESTORE ----
 // ---- EMAIL BACKUP ----
 const EMAILJS_SVC='service_bat3rl7',EMAILJS_TPL='template_z6iol5p',OWNER_EMAIL='pathiyaragrandeurllp@gmail.com';
 
@@ -1448,26 +1602,51 @@ window.saveOwnerLoginPin=function(){
   toast('Login PIN saved ✓');
 }
 
-// OWNER LOGIN
+// Set company selector to current URL code
+setTimeout(()=>{
+  updateCompanyDropdown();
+  const sel=document.getElementById('company-sel');
+  if(sel)sel.value=_activeCode;
+  document.title=_activeCompany.name+' — Owner';
+  const ht=document.getElementById('header-title');
+  if(ht)ht.textContent=_activeCompany.name;
+  const ls=document.getElementById('login-sub');
+  if(ls)ls.textContent=_activeCompany.name;
+},100);
+
+window.switchCompany=function(code){
+  // Reload page with new company code
+  const url=new URL(window.location.href);
+  url.searchParams.set('company',code);
+  window.location.href=url.toString();
+}
+
 window.ownerLogin=function(){
+  const sel=document.getElementById('company-sel');
+  if(sel&&sel.value!==_activeCode){
+    switchCompany(sel.value);
+    return;
+  }
   const pin=document.getElementById('lpin').value.trim();
   const err=document.getElementById('lerr');
-  const stored=localStorage.getItem('cvt_owner_pin')||'0000';
+  const stored=localStorage.getItem('cvt_owner_pin_'+_activeCode)||localStorage.getItem('cvt_owner_pin')||'0000';
   if(pin!==stored){err.textContent='Incorrect PIN. Please try again.';err.style.display='block';document.getElementById('lpin').value='';return;}
   err.style.display='none';
   document.getElementById('owner-login').style.display='none';
   document.getElementById('owner-app').classList.add('show');
-  try{localStorage.setItem('cvt_owner_session','1');}catch(e){}
+  const ht=document.getElementById('header-title');
+  if(ht)ht.textContent=_activeCompany.name;
+  try{localStorage.setItem('cvt_owner_session_'+_activeCode,'1');}catch(e){}
   setTimeout(()=>{updateBackupStatus();scheduleAutoBackupCheck();checkDailyEmailBackup();},500);
 }
 window.ownerLogout=function(){
-  try{localStorage.removeItem('cvt_owner_session');}catch(e){}
+  try{localStorage.removeItem('cvt_owner_session_'+_activeCode);}catch(e){}
   document.getElementById('owner-app').classList.remove('show');
   document.getElementById('owner-login').style.display='flex';
   document.getElementById('lpin').value='';
 }
 setTimeout(()=>{
-  try{if(localStorage.getItem('cvt_owner_session')==='1'){document.getElementById('owner-login').style.display='none';document.getElementById('owner-app').classList.add('show');setTimeout(()=>{updateBackupStatus();scheduleAutoBackupCheck();checkDailyEmailBackup();},500);}}catch(e){}
+  try{if(localStorage.getItem('cvt_owner_session_'+_activeCode)==='1'){document.getElementById('owner-login').style.display='none';document.getElementById('owner-app').classList.add('show');const ht=document.getElementById('header-title');if(ht)ht.textContent=_activeCompany.name;setTimeout(()=>{updateBackupStatus();scheduleAutoBackupCheck();checkDailyEmailBackup();},500);}}catch(e){}
 },100);
 
 // UTILS
