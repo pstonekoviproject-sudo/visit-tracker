@@ -1132,83 +1132,35 @@ function populateRouteStaff(){
   sel.innerHTML='<option value="">— Select Staff —</option>'+mktStaff.map(s=>`<option value="${s.name}"${s.name===cur?' selected':''}>${s.name}</option>`).join('');
 }
 
-window.renderRoute=async function(){
+window.renderRoute=function(){
   const staffName=document.getElementById('route-staff')?.value;
   const date=document.getElementById('route-date')?.value;
   const rc=document.getElementById('route-content');
   if(!staffName||!date){rc.innerHTML=`<div class="empty"><i class="ti ti-route"></i><p>Select staff and date</p></div>`;return;}
   const dayVisits=visits.filter(v=>v.assisted===staffName&&(v.visitType==='field-visit'||v.visitType==='influencer-visit')&&v.date===date).sort((a,b)=>(a.id).localeCompare(b.id));
   if(!dayVisits.length){rc.innerHTML=`<div class="empty"><i class="ti ti-calendar-x"></i><p>${staffName} — No visits on ${date}</p></div>`;return;}
-  rc.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--tx2)"><div style="width:32px;height:32px;border:3px solid var(--bdr2);border-top-color:var(--amber);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px"></div><div style="font-size:13px;font-weight:500">Calculating road distance...</div></div>`;
 
-  const ORS_KEY='eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImQxMDIxYzYzZTQ1MjQ1MWY4MzNkOWI1YjIxMGIyZDY1IiwiaCI6Im11cm11cjY0In0=';
-  
   let totalKm=0;
   const withDist=[];
-  let useRoadDistance=false;
+  const useRoadDistance=false;
 
-  // Helper: haversine straight-line distance
   function haversine(p,c){
     const R=6371,dLat=(parseFloat(c.gpsLat)-parseFloat(p.gpsLat))*Math.PI/180,dLng=(parseFloat(c.gpsLng)-parseFloat(p.gpsLng))*Math.PI/180;
     const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(parseFloat(p.gpsLat)*Math.PI/180)*Math.cos(parseFloat(c.gpsLat)*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
     return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
   }
 
-  if(gpsVisits.length>=2){
-    try{
-      const coords=gpsVisits.map(v=>[parseFloat(v.gpsLng),parseFloat(v.gpsLat)]);
-      // Timeout after 8 seconds
-      const controller=new AbortController();
-      const timeout=setTimeout(()=>controller.abort(),8000);
-      const res=await fetch('https://api.openrouteservice.org/v2/directions/driving-car/geojson',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':ORS_KEY},
-        body:JSON.stringify({coordinates:coords}),
-        signal:controller.signal
-      });
-      clearTimeout(timeout);
-      const data=await res.json();
-      if(data.features&&data.features[0]){
-        totalKm=data.features[0].properties.summary.distance/1000;
-        const segments=data.features[0].properties.segments||[];
-        let segIdx=0;
-        dayVisits.forEach((v,i)=>{
-          let dist=null;
-          if(i>0&&gpsVisits.length>=2){
-            const seg=segments[segIdx];
-            if(seg){dist=seg.distance/1000;segIdx++;}
-          }
-          withDist.push({...v,dist});
-        });
-        useRoadDistance=true;
-      } else throw new Error('No route data');
-    }catch(e){
-      // Fallback to haversine
-      dayVisits.forEach((v,i)=>{
-        let dist=null;
-        if(i>0){
-          const p=dayVisits[i-1];
-          if(p.gpsLat&&p.gpsLng&&v.gpsLat&&v.gpsLng){
-            dist=haversine(p,v);
-            totalKm+=dist;
-          }
-        }
-        withDist.push({...v,dist});
-      });
-    }
-  } else {
-    dayVisits.forEach((v,i)=>{
-      let dist=null;
-      if(i>0){
-        const p=dayVisits[i-1];
-        if(p.gpsLat&&p.gpsLng&&v.gpsLat&&v.gpsLng){
-          dist=haversine(p,v);
-          totalKm+=dist;
-        }
+  dayVisits.forEach((v,i)=>{
+    let dist=null;
+    if(i>0){
+      const p=dayVisits[i-1];
+      if(p.gpsLat&&p.gpsLng&&v.gpsLat&&v.gpsLng){
+        dist=haversine(p,v);
+        totalKm+=dist;
       }
-      withDist.push({...v,dist});
-    });
-  }
+    }
+    withDist.push({...v,dist});
+  });
 
   const gpsVisits=dayVisits.filter(v=>v.gpsLat&&v.gpsLng);
   const mapsLink=gpsVisits.length>=2?'https://www.google.com/maps/dir/'+gpsVisits.map(v=>v.gpsLat+','+v.gpsLng).join('/'):null;
