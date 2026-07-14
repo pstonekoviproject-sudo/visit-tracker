@@ -561,7 +561,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-hei
       <div class="fgrp"><label>Assisted By</label><select id="fass"></select></div>
       <div class="fgrp"><label>Product</label><input type="text" id="fprod" placeholder="Product name"></div>
       <div class="fgrp"><label>Source</label><select id="fsrc"><option>Walk-in</option><option>Social Media</option><option>Referral</option><option>Phone</option><option>Other</option></select></div>
-      <div class="fgrp"><label>Stage</label><select id="fstg"><option>Pending</option><option>Partially Billed</option><option>Fully Billed</option><option>Follow-up</option><option>Closed</option></select></div>
+      <div class="fgrp"><label>Stage</label><select id="fstg"><option>Billed</option><option>Quotation Send</option><option>Follow-up</option><option>Other Shop</option><option>Not Interested</option></select></div>
       <div class="fgrp"><label>Temperature</label><select id="ftmp"><option value="">—</option><option>Hot</option><option>Warm</option><option>Cold</option></select></div>
     </div>
     <div class="fgrp"><label>Follow-up Date</label><input type="date" id="ffdt"></div>
@@ -679,7 +679,7 @@ window._saveStaffPin=async function(s){await setDoc(doc(db,'staff',s.id),s);};
 function needsFollowup(v){return v.fdate&&v.stage!=='Fully Billed'&&v.stage!=='Closed';}
 function dlabel(d){const diff=Math.round((new Date(d)-new Date(today))/86400000);if(diff===0)return 'Today';if(diff===1)return 'Tomorrow';if(diff>0)return diff+'d left';return Math.abs(diff)+'d overdue';}
 function dclass(d){return d<today?'b-od':d===today?'b-today':'b-upcoming';}
-function sbadge(s){const m={pending:'b-pending','partially billed':'b-partial','fully billed':'b-fully','follow-up':'b-followup',closed:'b-closed'};return m[s?.toLowerCase()]||'b-pending';}
+function sbadge(s){const m={billed:'b-fully','quotation send':'b-partial','follow-up':'b-followup','other shop':'b-pending','not interested':'b-closed'};return m[s?.toLowerCase()]||'b-pending';}
 function ini(n){return n.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);}
 
 // NAVIGATION
@@ -702,7 +702,7 @@ function renderDash(){
   document.getElementById('dash-loading').style.display='none';
   document.getElementById('dash-content').style.display='block';
   const shopVisits=visits.filter(v=>v.visitType!=='field-visit'&&v.visitType!=='influencer-visit');
-  const t=shopVisits.length,bi=shopVisits.filter(v=>v.stage==='Fully Billed').length,pe=shopVisits.filter(v=>v.stage==='Pending').length,tf=shopVisits.filter(v=>v.fdate===today&&needsFollowup(v));
+  const t=shopVisits.length,bi=shopVisits.filter(v=>v.stage==='Billed').length,pe=shopVisits.filter(v=>v.stage==='Pending').length,tf=shopVisits.filter(v=>v.fdate===today&&needsFollowup(v));
   document.getElementById('dash-m').innerHTML=`
     <div class="met" style="--met-color:var(--amber)" onclick="goPage('visits')"><div class="met-val">${t}</div><div class="met-lbl">Total Visits</div></div>
     <div class="met" style="--met-color:var(--green)" onclick="goPage('visits');setVF('Fully Billed')"><div class="met-val" style="color:var(--green)">${bi}</div><div class="met-lbl">Fully Billed</div></div>
@@ -967,8 +967,8 @@ window.renderReport=function(){
   if(!filtered.length&&!mktFiltered.length){document.getElementById('report-content').innerHTML=`<div class="empty"><i class="ti ti-chart-off"></i><p>No data for this period</p></div>`;return;}
 
   const total=filtered.length;
-  const fullyBilled=filtered.filter(v=>v.stage==='Fully Billed').length;
-  const partBilled=filtered.filter(v=>v.stage==='Partially Billed').length;
+  const fullyBilled=filtered.filter(v=>v.stage==='Billed').length;
+  const partBilled=filtered.filter(v=>v.stage==='Quotation Send').length;
   const billed=fullyBilled+partBilled;
   const pending=filtered.filter(v=>v.stage==='Pending').length;
   const followup=filtered.filter(v=>v.stage==='Follow-up').length;
@@ -979,15 +979,15 @@ window.renderReport=function(){
   const staffNames=[...new Set(filtered.map(v=>v.assisted).filter(Boolean))].sort();
   const staffData=staffNames.map(s=>{
     const sv=filtered.filter(v=>v.assisted===s);
-    const sb=sv.filter(v=>v.stage==='Fully Billed'||v.stage==='Partially Billed').length;
+    const sb=sv.filter(v=>v.stage==='Billed'||v.stage==='Quotation Send').length;
     const rate=sv.length>0?Math.round((sb/sv.length)*100):0;
-    return{name:s,total:sv.length,billed:sb,fully:sv.filter(v=>v.stage==='Fully Billed').length,partial:sv.filter(v=>v.stage==='Partially Billed').length,pending:sv.filter(v=>v.stage==='Pending').length,followup:sv.filter(v=>v.stage==='Follow-up').length,hot:sv.filter(v=>v.temp==='Hot').length,overdueCount:sv.filter(v=>v.fdate&&v.fdate<today&&v.stage!=='Fully Billed'&&v.stage!=='Closed').length,bestSrc:(()=>{const srcs=sv.reduce((a,v)=>{a[v.source]=(a[v.source]||0)+1;return a},{});return Object.entries(srcs).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';})(),rate};
+    return{name:s,total:sv.length,billed:sb,fully:sv.filter(v=>v.stage==='Billed').length,partial:sv.filter(v=>v.stage==='Quotation Send').length,pending:sv.filter(v=>v.stage==='Pending').length,followup:sv.filter(v=>v.stage==='Follow-up').length,hot:sv.filter(v=>v.temp==='Hot').length,overdueCount:sv.filter(v=>v.fdate&&v.fdate<today&&v.stage!=='Fully Billed'&&v.stage!=='Closed').length,bestSrc:(()=>{const srcs=sv.reduce((a,v)=>{a[v.source]=(a[v.source]||0)+1;return a},{});return Object.entries(srcs).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';})(),rate};
   });
 
   const srcNames=[...new Set(filtered.map(v=>v.source).filter(Boolean))].sort();
   const srcData=srcNames.map(src=>{
     const sv=filtered.filter(v=>v.source===src);
-    const sb=sv.filter(v=>v.stage==='Fully Billed'||v.stage==='Partially Billed').length;
+    const sb=sv.filter(v=>v.stage==='Billed'||v.stage==='Quotation Send').length;
     return{name:src,total:sv.length,billed:sb,rate:sv.length>0?Math.round((sb/sv.length)*100):0};
   });
 
@@ -1109,7 +1109,7 @@ window.showStaffVisits=function(name){
 
 window.showDetail=function(type){
   const titles={all:'All Visits',billed:'Billed Visits',pending:'Pending',fully:'Fully Billed',partial:'Partially Billed',followup:'Follow-up',closed:'Closed'};
-  const filters={all:v=>true,billed:v=>v.stage==='Fully Billed'||v.stage==='Partially Billed',pending:v=>v.stage==='Pending',fully:v=>v.stage==='Fully Billed',partial:v=>v.stage==='Partially Billed',followup:v=>v.stage==='Follow-up',closed:v=>v.stage==='Closed'};
+  const filters={all:v=>true,billed:v=>v.stage==='Billed'||v.stage==='Quotation Send',pending:v=>v.stage==='Pending',fully:v=>v.stage==='Billed',partial:v=>v.stage==='Quotation Send',followup:v=>v.stage==='Follow-up',closed:v=>v.stage==='Closed'};
   const list=_detailData.filter(filters[type]||filters.all).sort((a,b)=>b.date.localeCompare(a.date));
   showInlineDetail(titles[type]+' ('+list.length+')',list);
 }
