@@ -1143,31 +1143,45 @@ window.renderRoute=async function(){
 
   const ORS_KEY='eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImQxMDIxYzYzZTQ1MjQ1MWY4MzNkOWI1YjIxMGIyZDY1IiwiaCI6Im11cm11cjY0In0=';
   
-  // Calculate road distance using OpenRouteService
   let totalKm=0;
   const withDist=[];
-  
+  let useRoadDistance=false;
+
+  // Helper: haversine straight-line distance
+  function haversine(p,c){
+    const R=6371,dLat=(parseFloat(c.gpsLat)-parseFloat(p.gpsLat))*Math.PI/180,dLng=(parseFloat(c.gpsLng)-parseFloat(p.gpsLng))*Math.PI/180;
+    const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(parseFloat(p.gpsLat)*Math.PI/180)*Math.cos(parseFloat(c.gpsLat)*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+
   if(gpsVisits.length>=2){
     try{
       const coords=gpsVisits.map(v=>[parseFloat(v.gpsLng),parseFloat(v.gpsLat)]);
+      // Timeout after 8 seconds
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(),8000);
       const res=await fetch('https://api.openrouteservice.org/v2/directions/driving-car/geojson',{
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':ORS_KEY},
-        body:JSON.stringify({coordinates:coords})
+        body:JSON.stringify({coordinates:coords}),
+        signal:controller.signal
       });
+      clearTimeout(timeout);
       const data=await res.json();
       if(data.features&&data.features[0]){
         totalKm=data.features[0].properties.summary.distance/1000;
-        // Get segment distances
         const segments=data.features[0].properties.segments||[];
+        let segIdx=0;
         dayVisits.forEach((v,i)=>{
           let dist=null;
-          if(i>0&&segments[i-1]){
-            dist=segments[i-1].distance/1000;
+          if(i>0&&gpsVisits.length>=2){
+            const seg=segments[segIdx];
+            if(seg){dist=seg.distance/1000;segIdx++;}
           }
           withDist.push({...v,dist});
         });
-      } else throw new Error('No route');
+        useRoadDistance=true;
+      } else throw new Error('No route data');
     }catch(e){
       // Fallback to haversine
       dayVisits.forEach((v,i)=>{
@@ -1175,9 +1189,7 @@ window.renderRoute=async function(){
         if(i>0){
           const p=dayVisits[i-1];
           if(p.gpsLat&&p.gpsLng&&v.gpsLat&&v.gpsLng){
-            const R=6371,dLat=(parseFloat(v.gpsLat)-parseFloat(p.gpsLat))*Math.PI/180,dLng=(parseFloat(v.gpsLng)-parseFloat(p.gpsLng))*Math.PI/180;
-            const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(parseFloat(p.gpsLat)*Math.PI/180)*Math.cos(parseFloat(v.gpsLat)*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
-            dist=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+            dist=haversine(p,v);
             totalKm+=dist;
           }
         }
@@ -1190,9 +1202,7 @@ window.renderRoute=async function(){
       if(i>0){
         const p=dayVisits[i-1];
         if(p.gpsLat&&p.gpsLng&&v.gpsLat&&v.gpsLng){
-          const R=6371,dLat=(parseFloat(v.gpsLat)-parseFloat(p.gpsLat))*Math.PI/180,dLng=(parseFloat(v.gpsLng)-parseFloat(p.gpsLng))*Math.PI/180;
-          const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(parseFloat(p.gpsLat)*Math.PI/180)*Math.cos(parseFloat(v.gpsLat)*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
-          dist=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+          dist=haversine(p,v);
           totalKm+=dist;
         }
       }
@@ -1213,7 +1223,7 @@ window.renderRoute=async function(){
         <div style="background:rgba(255,255,255,.7);border-radius:12px;padding:11px;text-align:center"><div style="font-size:22px;font-weight:800;color:#92400E">${gpsVisits.length}</div><div style="font-size:11px;color:#92400E;margin-top:1px;font-weight:500">GPS Tagged</div></div>
         <div style="background:rgba(255,255,255,.7);border-radius:12px;padding:11px;text-align:center"><div style="font-size:22px;font-weight:800;color:#92400E">${photosTotal}</div><div style="font-size:11px;color:#92400E;margin-top:1px;font-weight:500">Photos</div></div>
       </div>
-      <div style="margin-top:10px;font-size:11px;color:#B45309"><i class="ti ti-road" style="font-size:11px;vertical-align:-1px"></i> Road distance via OpenRouteService${totalKm===0?' (GPS data unavailable)':''}</div>
+      <div style="margin-top:10px;font-size:11px;color:#B45309"><i class="ti ti-${useRoadDistance?'road':'info-circle'}" style="font-size:11px;vertical-align:-1px"></i> ${useRoadDistance?'Road distance via OpenRouteService':'Approximate straight-line distance (road distance unavailable)'}</div>
     </div>
     ${mapsLink?`<a href="${mapsLink}" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:14px;text-decoration:none;display:flex"><i class="ti ti-map-2"></i> View Full Route on Google Maps</a>`:''}
     <div style="font-size:12px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Visit-by-Visit Route</div>
