@@ -116,8 +116,25 @@ function initPStone(){
       },
       createdAt:new Date().toISOString()
     };
-    saveCompanies(companies);
   }
+  if(!companies['PATHIYARA']){
+    companies['PATHIYARA']={
+      name:'Pathiyara Buildware',
+      code:'PATHIYARA',
+      color:'#2E6BE6',
+      ownerName:'Owner',
+      firebase:{
+        apiKey:'AIzaSyC-5DfASXLAdCnqrdy-idV7gRG3vuABwSA',
+        authDomain:'showroom-visit.firebaseapp.com',
+        projectId:'showroom-visit',
+        storageBucket:'showroom-visit.firebasestorage.app',
+        messagingSenderId:'930914164191',
+        appId:'1:930914164191:web:4c83ffe888ae8374d5386a'
+      },
+      createdAt:new Date().toISOString()
+    };
+  }
+  saveCompanies(companies);
 }
 initPStone();
 
